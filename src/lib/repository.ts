@@ -1,5 +1,11 @@
 import { createClient, type SupabaseClient } from "@supabase/supabase-js";
-import type { Account, Benefit, FinanceData, Transaction } from "./model";
+import type {
+  Account,
+  Benefit,
+  FinanceData,
+  FinancialConnection,
+  Transaction,
+} from "./model";
 import { emptyFinanceData, removeSampleRecords } from "./local-data";
 
 export interface FinanceRepository {
@@ -69,6 +75,19 @@ type AccountRow = {
   opening_balance_cents: number;
   color: string;
   active: boolean;
+  source: Account["source"];
+  financial_connection_id: string | null;
+  external_id: string | null;
+  provider_balance_cents: number | null;
+  last_synced_at: string | null;
+};
+type ConnectionRow = {
+  id: string;
+  provider_item_id: string;
+  institution_name: string;
+  is_sandbox: boolean;
+  status: FinancialConnection["status"];
+  last_sync_at: string | null;
 };
 type BenefitRow = {
   id: string;
@@ -90,6 +109,8 @@ type TransactionRow = {
   account_id: string | null;
   benefit_id: string | null;
   created_at: string;
+  source: Transaction["source"];
+  possible_duplicate: boolean;
 };
 export class SupabaseRepository implements FinanceRepository {
   constructor(
@@ -97,10 +118,12 @@ export class SupabaseRepository implements FinanceRepository {
     private userId: string,
   ) {}
   async load(): Promise<FinanceData> {
-    const [accounts, benefits, transactions] = await Promise.all([
+    const [accounts, benefits, transactions, connections] = await Promise.all([
       this.client
         .from("accounts")
-        .select("id,name,institution,kind,opening_balance_cents,color,active")
+        .select(
+          "id,name,institution,kind,opening_balance_cents,color,active,source,financial_connection_id,external_id,provider_balance_cents,last_synced_at",
+        )
         .order("created_at"),
       this.client
         .from("benefit_accounts")
@@ -111,11 +134,22 @@ export class SupabaseRepository implements FinanceRepository {
       this.client
         .from("transactions")
         .select(
-          "id,description,amount_cents,type,date,category,account_id,benefit_id,created_at",
+          "id,description,amount_cents,type,date,category,account_id,benefit_id,created_at,source,possible_duplicate",
         )
+        .eq("provider_deleted", false)
         .order("date", { ascending: false }),
+      this.client
+        .from("financial_connections")
+        .select(
+          "id,provider_item_id,institution_name,is_sandbox,status,last_sync_at",
+        )
+        .order("created_at", { ascending: false }),
     ]);
-    const error = accounts.error ?? benefits.error ?? transactions.error;
+    const error =
+      accounts.error ??
+      benefits.error ??
+      transactions.error ??
+      connections.error;
     if (error) throw error;
     return {
       accounts: ((accounts.data ?? []) as AccountRow[]).map((row) => ({
@@ -126,6 +160,11 @@ export class SupabaseRepository implements FinanceRepository {
         openingBalanceCents: row.opening_balance_cents,
         color: row.color,
         active: row.active,
+        source: row.source,
+        connectionId: row.financial_connection_id,
+        externalId: row.external_id,
+        providerBalanceCents: row.provider_balance_cents,
+        lastSyncedAt: row.last_synced_at,
       })),
       benefits: ((benefits.data ?? []) as BenefitRow[]).map((row) => ({
         id: row.id,
@@ -148,8 +187,18 @@ export class SupabaseRepository implements FinanceRepository {
           accountId: row.account_id,
           benefitId: row.benefit_id,
           createdAt: row.created_at,
+          source: row.source,
+          possibleDuplicate: row.possible_duplicate,
         }),
       ),
+      connections: ((connections.data ?? []) as ConnectionRow[]).map((row) => ({
+        id: row.id,
+        providerItemId: row.provider_item_id,
+        institutionName: row.institution_name,
+        isSandbox: row.is_sandbox,
+        status: row.status,
+        lastSyncAt: row.last_sync_at,
+      })),
     };
   }
   async addAccount(item: Account) {

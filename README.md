@@ -19,12 +19,16 @@ Acesse `http://localhost:3000`. Sem variáveis de ambiente, o aplicativo inicia 
 
 ## Configurar Supabase
 
-1. Crie um projeto Supabase e aplique `supabase/migrations/20260930141712_initial_finance_schema.sql` no banco com o CLI ou SQL Editor.
+1. Crie um projeto Supabase e aplique as migrations de `supabase/migrations` em ordem com o CLI.
 2. Copie `.env.example` para `.env.local` e informe a URL do projeto e a **publishable key**.
 3. Configure o Auth para e-mail/senha e os URLs de redirecionamento usados em desenvolvimento e produção.
 4. Reinicie o servidor. O login substitui o armazenamento local e cada usuário acessa apenas seus dados via RLS.
 
 Não configure service role key no navegador. Nunca envie `.env.local` ao Git.
+
+## Open Finance
+
+A integração de leitura com Pluggy conecta instituições, importa contas, saldos e transações e permite sincronizar e desconectar. Requer Supabase e credenciais Pluggy configuradas no servidor. Em desenvolvimento o widget inclui Sandbox; em produção, conectores Sandbox ficam ocultos. Veja [configuração e teste Sandbox](docs/OPEN_FINANCE.md).
 
 ## Comandos
 
@@ -43,4 +47,4 @@ O aplicativo oferece manifest, ícones e service worker. Para instalar fora do a
 
 ## Estado atual
 
-Contas, benefícios, receitas, despesas e Dashboard estão funcionais com armazenamento local, sem registros pré-carregados. O esquema Supabase e a autenticação inicial estão implementados, mas exigem projeto e credenciais reais para validação completa. As demais áreas mostram o planejamento sem aparentar que já operam. Consulte [arquitetura](docs/ARCHITECTURE.md) e [roadmap](docs/ROADMAP.md).
+Contas, benefícios, receitas, despesas e Dashboard funcionam com armazenamento local, sem registros pré-carregados. O esquema Supabase, a autenticação e a integração Pluggy estão implementados, mas exigem projeto, migrations e credenciais reais para validação completa. Consulte [arquitetura](docs/ARCHITECTURE.md) e [roadmap](docs/ROADMAP.md).

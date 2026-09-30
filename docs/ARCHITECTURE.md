@@ -16,8 +16,14 @@ Valores BRL são inteiros em centavos no código e `bigint` no PostgreSQL. O sal
 
 ## PWA
 
+## Open Finance
+
+`src/lib/open-finance` separa o contrato `OpenFinanceProvider`, o cliente HTTP Pluggy, a normalização e o serviço de sincronização. Rotas Next.js autenticadas geram Connect Token, associam Items, sincronizam e desconectam; o webhook valida um header secreto próprio e registra `eventId` para idempotência. Credenciais Pluggy e chave secreta Supabase só são usadas no servidor. A migration `20260930145211_pluggy_open_finance.sql` cria conexões e eventos e amplia contas/transações existentes com origem e IDs externos. O saldo Open Finance é uma fotografia do provider; para contas manuais, o saldo inicial continua somado aos lançamentos. Consulte [OPEN_FINANCE.md](OPEN_FINANCE.md).
+
+## PWA
+
 O manifest tem ícones PNG, nome e modo standalone. O service worker guarda apenas ícones e assets estáticos do Next.js. Documentos, rotas de dados e respostas financeiras não entram no cache da PWA. HTTPS é necessário para instalação fora de `localhost`.
 
 ## Limites desta fase
 
-Sem credenciais do projeto Supabase, não foi possível aplicar a migração nem executar testes de RLS contra um banco real. O esquema está versionado e deve ser aplicado antes de configurar as variáveis. Os módulos posteriores e a integração Open Finance estão no roadmap; nenhuma conexão bancária é anunciada como funcional.
+Sem credenciais do projeto Supabase e Pluggy, não foi possível aplicar as migrations nem executar testes de RLS ou Sandbox contra serviços reais. O esquema está versionado e deve ser aplicado antes de configurar as variáveis. Os módulos posteriores continuam no roadmap.

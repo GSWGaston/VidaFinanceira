@@ -9,6 +9,7 @@
 - Cadastro funcional de contas, benefícios e receitas/despesas com validação e armazenamento local vazio por padrão.
 - Remoção dos registros de exemplo e limpeza dos dados antigos no navegador.
 - Schema inicial Supabase com RLS e separação de usuários; fluxo inicial de autenticação.
+- Integração de leitura Pluggy Open Finance: Connect Widget, Sandbox em desenvolvimento, contas/saldos/transações normalizados, sincronização, webhook, desconexão e RLS. A validação externa depende de credenciais e aplicação das migrations.
 
 ## Em desenvolvimento
 
@@ -23,5 +24,5 @@
 3. Relatórios, histórico avançado e patrimônio.
 4. Importação CSV, OFX, XLSX e PDF com revisão, regras e detecção de duplicatas.
 5. Módulo completo de veículos e lançamentos financeiros sem duplicação.
-6. Abstração Open Finance e integração real quando houver provedor contratado.
+6. Evoluir Open Finance com operação em produção, monitoramento e reconciliação após validar Sandbox e credenciais reais.
 7. Exportação, anexos em Storage, exclusão de conta, melhorias PWA e testes E2E.

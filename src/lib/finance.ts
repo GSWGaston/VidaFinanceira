@@ -9,6 +9,15 @@ export function balanceFor(
     source === "account"
       ? data.accounts.find((item) => item.id === id)
       : data.benefits.find((item) => item.id === id);
+  const account =
+    source === "account"
+      ? data.accounts.find((item) => item.id === id)
+      : undefined;
+  if (
+    account?.source === "open_finance" &&
+    account.providerBalanceCents != null
+  )
+    return account.providerBalanceCents;
   return (
     (entity?.openingBalanceCents ?? 0) +
     sumCents(

@@ -1,5 +1,5 @@
 "use client";
-import { useMemo, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import {
   ArrowDownLeft,
   ArrowUpRight,
@@ -13,6 +13,10 @@ import { AccountDialog, BenefitDialog, TransactionDialog } from "./forms";
 import { EmptyState, LoadingCards, Money, Badge } from "./ui";
 import { balanceFor, dashboardTotals } from "@/lib/finance";
 import { accountKinds, benefitKinds } from "@/lib/model";
+import { categories } from "@/lib/model";
+import { supabase } from "@/lib/repository";
+import { toast } from "sonner";
+import { OpenFinanceControls } from "./open-finance-connect";
 function PageHeader({
   eyebrow,
   title,
@@ -38,6 +42,19 @@ function PageHeader({
 export function AccountsPage() {
   const { data, loading, error, reload } = useApp();
   const [open, setOpen] = useState(false);
+  const syncing =
+    data.connections?.some((connection) => connection.status === "syncing") ??
+    false;
+  useEffect(() => {
+    if (!syncing) return;
+    let attempts = 0;
+    const timer = window.setInterval(() => {
+      attempts += 1;
+      void reload();
+      if (attempts >= 12) window.clearInterval(timer);
+    }, 15000);
+    return () => window.clearInterval(timer);
+  }, [syncing, reload]);
   return (
     <>
       <PageHeader
@@ -45,9 +62,12 @@ export function AccountsPage() {
         title="Contas"
         subtitle="Acompanhe seu saldo disponível em cada conta."
         action={
-          <button className="btn btn-primary" onClick={() => setOpen(true)}>
-            <Plus size={17} /> Nova conta
-          </button>
+          <div className="flex flex-wrap items-center gap-2">
+            <OpenFinanceControls />
+            <button className="btn btn-outline" onClick={() => setOpen(true)}>
+              <Plus size={17} /> Nova conta
+            </button>
+          </div>
         }
       />
       {error && <ErrorBanner error={error} reload={reload} />}
@@ -67,6 +87,52 @@ export function AccountsPage() {
               Benefícios não entram neste total.
             </p>
           </div>
+          {!!data.connections?.length && (
+            <section className="mb-6" aria-label="Instituições conectadas">
+              <h2 className="mb-3 text-lg font-extrabold">
+                Instituições conectadas
+              </h2>
+              <div className="grid gap-3">
+                {data.connections.map((connection) => (
+                  <div
+                    className="card flex flex-col gap-3 p-5 sm:flex-row sm:items-center sm:justify-between"
+                    key={connection.id}
+                  >
+                    <div>
+                      <div className="flex flex-wrap items-center gap-2">
+                        <strong>{connection.institutionName}</strong>
+                        {connection.isSandbox && (
+                          <Badge color="gray">Ambiente de testes</Badge>
+                        )}
+                      </div>
+                      <p className="muted text-xs">
+                        {connection.status === "connected"
+                          ? "Conectada"
+                          : connection.status === "syncing"
+                            ? "Sincronizando"
+                            : connection.status === "waiting_user_input"
+                              ? "Aguardando confirmação no Pluggy"
+                              : connection.status === "waiting_user_action"
+                                ? "Aguardando ação no banco"
+                                : connection.status === "error"
+                                  ? "Requer atenção"
+                                  : "Desconectada"}
+                        {connection.lastSyncAt
+                          ? ` · Atualizada em ${new Date(connection.lastSyncAt).toLocaleString("pt-BR")}`
+                          : ""}
+                      </p>
+                    </div>
+                    {connection.status !== "disconnected" && (
+                      <OpenFinanceControls
+                        connectionId={connection.id}
+                        itemId={connection.providerItemId}
+                      />
+                    )}
+                  </div>
+                ))}
+              </div>
+            </section>
+          )}
           {data.accounts.length ? (
             <div className="grid gap-4 md:grid-cols-2 xl:grid-cols-3">
               {data.accounts.map((item) => (
@@ -86,6 +152,15 @@ export function AccountsPage() {
                   <p className="muted text-xs">
                     {item.institution} · {accountKinds[item.kind]}
                   </p>
+                  {item.source === "open_finance" && (
+                    <p className="muted mt-2 text-xs">
+                      Open Finance
+                      {data.connections?.find((c) => c.id === item.connectionId)
+                        ?.isSandbox
+                        ? " · Ambiente de testes"
+                        : ""}
+                    </p>
+                  )}
                   <div className="mt-6 border-t border-border pt-4">
                     <p className="muted text-xs">Saldo atual</p>
                     <Money
@@ -183,6 +258,19 @@ export function TransactionsPage() {
   const [open, setOpen] = useState(false);
   const [search, setSearch] = useState("");
   const [type, setType] = useState("all");
+  const correctCategory = async (id: string, category: string) => {
+    if (!supabase) return;
+    const { error } = await supabase
+      .from("transactions")
+      .update({ category, category_overridden: true })
+      .eq("id", id)
+      .eq("source", "open_finance");
+    if (error) toast.error("Não foi possível alterar a categoria.");
+    else {
+      await reload();
+      toast.success("Categoria atualizada.");
+    }
+  };
   const visible = useMemo(
     () =>
       [...data.transactions]
@@ -267,6 +355,37 @@ export function TransactionsPage() {
                         "pt-BR",
                       )}
                     </p>
+                    {item.source === "open_finance" && (
+                      <div className="mt-1 flex flex-wrap items-center gap-2">
+                        <span className="muted text-xs">
+                          {item.possibleDuplicate
+                            ? "Possível duplicata · "
+                            : ""}
+                          Open Finance
+                        </span>
+                        {supabase && (
+                          <select
+                            className="input max-w-36 text-xs"
+                            aria-label={`Categoria de ${item.description}`}
+                            value={item.category}
+                            onChange={(event) =>
+                              void correctCategory(item.id, event.target.value)
+                            }
+                          >
+                            <option value={item.category}>
+                              {item.category}
+                            </option>
+                            {categories
+                              .filter((category) => category !== item.category)
+                              .map((category) => (
+                                <option key={category} value={category}>
+                                  {category}
+                                </option>
+                              ))}
+                          </select>
+                        )}
+                      </div>
+                    )}
                   </div>
                   <Money
                     cents={

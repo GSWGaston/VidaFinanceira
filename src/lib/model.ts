@@ -6,6 +6,25 @@ export type Account = {
   openingBalanceCents: number;
   color: string;
   active: boolean;
+  source?: "manual" | "open_finance" | "import";
+  connectionId?: string | null;
+  externalId?: string | null;
+  providerBalanceCents?: number | null;
+  lastSyncedAt?: string | null;
+};
+export type FinancialConnection = {
+  id: string;
+  providerItemId: string;
+  institutionName: string;
+  isSandbox: boolean;
+  status:
+    | "connected"
+    | "syncing"
+    | "waiting_user_input"
+    | "waiting_user_action"
+    | "error"
+    | "disconnected";
+  lastSyncAt: string | null;
 };
 export type Benefit = {
   id: string;
@@ -27,11 +46,14 @@ export type Transaction = {
   accountId: string | null;
   benefitId: string | null;
   createdAt: string;
+  source?: "manual" | "open_finance" | "csv" | "ofx" | "xlsx" | "pdf";
+  possibleDuplicate?: boolean;
 };
 export type FinanceData = {
   accounts: Account[];
   benefits: Benefit[];
   transactions: Transaction[];
+  connections?: FinancialConnection[];
 };
 export const categories = [
   "Alimentação",
