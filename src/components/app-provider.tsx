@@ -11,7 +11,7 @@ import type { User } from "@supabase/supabase-js";
 import { toast, Toaster } from "sonner";
 import type { Account, Benefit, FinanceData, Transaction } from "@/lib/model";
 import {
-  DemoRepository,
+  LocalRepository,
   SupabaseRepository,
   supabase,
   supabaseConfigured,
@@ -24,7 +24,7 @@ type AppContextValue = {
   data: FinanceData;
   loading: boolean;
   error: string | null;
-  demo: boolean;
+  local: boolean;
   user: User | null;
   reload: () => Promise<void>;
   addAccount: (item: Account) => Promise<void>;
@@ -45,7 +45,7 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
         ? user && supabase
           ? new SupabaseRepository(supabase, user.id)
           : null
-        : new DemoRepository(),
+        : new LocalRepository(),
     [user],
   );
   const reload = useCallback(async () => {
@@ -121,7 +121,7 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
     data,
     loading,
     error,
-    demo: !supabaseConfigured,
+    local: !supabaseConfigured,
     user,
     reload,
     addAccount: (item) => mutate((repository) => repository.addAccount(item)),

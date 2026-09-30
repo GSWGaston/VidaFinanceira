@@ -4,7 +4,7 @@ import { LogOut, LockKeyhole, UserCircle2 } from "lucide-react";
 import { useApp } from "./app-provider";
 import { supabase } from "@/lib/repository";
 export function SettingsPage() {
-  const { demo, user } = useApp();
+  const { local, user } = useApp();
   const [password, setPassword] = useState("");
   const [message, setMessage] = useState("");
   const [busy, setBusy] = useState(false);
@@ -30,10 +30,9 @@ export function SettingsPage() {
             <UserCircle2 size={23} className="text-primary" />
             <h2 className="section-title">Conta</h2>
           </div>
-          {demo ? (
+          {local ? (
             <p className="muted mt-4 text-sm">
-              Você está no modo de demonstração. Os dados fictícios são
-              armazenados apenas neste navegador.
+              Seus dados são armazenados apenas neste navegador.
             </p>
           ) : (
             <>
@@ -50,7 +49,7 @@ export function SettingsPage() {
             </>
           )}
         </div>
-        {!demo && (
+        {!local && (
           <div className="card p-6">
             <div className="flex items-center gap-3">
               <LockKeyhole size={22} className="text-primary" />

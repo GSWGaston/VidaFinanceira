@@ -6,7 +6,8 @@
 - Shell responsivo com sidebar desktop e navegação inferior no celular.
 - PWA instalável com manifest, ícones e cache de assets estáticos.
 - Dashboard com saldos separados, entradas, saídas, resultado, categorias, transações recentes e contas.
-- Cadastro funcional de contas, benefícios e receitas/despesas com validação e modo de demonstração persistido localmente.
+- Cadastro funcional de contas, benefícios e receitas/despesas com validação e armazenamento local vazio por padrão.
+- Remoção dos registros de exemplo e limpeza dos dados antigos no navegador.
 - Schema inicial Supabase com RLS e separação de usuários; fluxo inicial de autenticação.
 
 ## Em desenvolvimento

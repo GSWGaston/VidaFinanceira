@@ -8,7 +8,7 @@ Next.js App Router entrega as rotas. Componentes em `src/components` cuidam da i
 
 Valores BRL são inteiros em centavos no código e `bigint` no PostgreSQL. O saldo de uma conta ou benefício é o saldo inicial somado aos lançamentos vinculados. Benefícios não entram no saldo financeiro livre. Totais do mês usam a data civil local. As transações dessa etapa suportam receita e despesa; transferências, parcelas e recorrências ficam para fases posteriores.
 
-`FinanceRepository` define leitura e escrita. `DemoRepository` persiste dados fictícios em `localStorage` do navegador; `SupabaseRepository` usa tabelas reais quando as duas variáveis públicas são configuradas. Não há migração automática dos dados de demonstração para uma conta real. O modo de demonstração é identificado na interface.
+`FinanceRepository` define leitura e escrita. `LocalRepository` inicia vazio e persiste registros criados pelo usuário em `localStorage`; `SupabaseRepository` usa tabelas reais quando as duas variáveis públicas são configuradas. Uma limpeza única remove os antigos registros de exemplo do armazenamento local e preserva os registros criados pelo usuário que ainda tenham uma fonte válida. Dados locais não são transferidos automaticamente para uma conta Supabase.
 
 ## Supabase e segurança
 

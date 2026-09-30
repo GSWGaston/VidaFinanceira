@@ -44,7 +44,7 @@ const navigation = [
 const mainMobile = navigation.slice(0, 4);
 export function AppShell({ children }: { children: React.ReactNode }) {
   const path = usePathname();
-  const { demo } = useApp();
+  const { local } = useApp();
   const [more, setMore] = useState(false);
   const [transactionOpen, setTransactionOpen] = useState(false);
   const [dark, setDark] = useState(false);
@@ -106,7 +106,7 @@ export function AppShell({ children }: { children: React.ReactNode }) {
           </div>
           <div className="flex items-center gap-2">
             <span className="hidden sm:inline-flex rounded-full bg-soft px-3 py-1.5 text-xs font-bold text-primary">
-              {demo ? "Modo demonstração" : "Conta pessoal"}
+              {local ? "Dados locais" : "Conta pessoal"}
             </span>
             <button
               aria-label={dark ? "Ativar tema claro" : "Ativar tema escuro"}
@@ -125,10 +125,10 @@ export function AppShell({ children }: { children: React.ReactNode }) {
           </div>
         </header>
         <main className="mx-auto max-w-[1450px] px-5 pb-32 pt-7 sm:px-9 lg:pb-14 lg:pt-10">
-          {demo && (
+          {local && (
             <div className="mb-6 rounded-xl border border-[#cce5d3] bg-[#ecf7ee] px-4 py-2.5 text-xs font-medium text-[#326e48]">
-              Dados fictícios de demonstração. Alterações são salvas somente
-              neste navegador.
+              Seus dados são salvos somente neste navegador. Configure o
+              Supabase para sincronização e acesso com uma conta.
             </div>
           )}
           {children}

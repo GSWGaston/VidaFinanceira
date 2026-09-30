@@ -1,5 +1,6 @@
 import { createClient, type SupabaseClient } from "@supabase/supabase-js";
 import type { Account, Benefit, FinanceData, Transaction } from "./model";
+import { emptyFinanceData, removeSampleRecords } from "./local-data";
 
 export interface FinanceRepository {
   load(): Promise<FinanceData>;
@@ -7,15 +8,29 @@ export interface FinanceRepository {
   addBenefit(item: Benefit): Promise<void>;
   addTransaction(item: Transaction): Promise<void>;
 }
-const localKey = "vida-financeira-demo-v1";
-export class DemoRepository implements FinanceRepository {
+const localKey = "vida-financeira-local-v2";
+const oldSampleKey = "vida-financeira-demo-v1";
+export class LocalRepository implements FinanceRepository {
   async load(): Promise<FinanceData> {
-    const { demoData } = await import("./demo");
     try {
       const saved = localStorage.getItem(localKey);
-      return saved ? (JSON.parse(saved) as FinanceData) : demoData;
+      const oldData = localStorage.getItem(oldSampleKey);
+      if (saved) {
+        if (oldData) localStorage.removeItem(oldSampleKey);
+        return JSON.parse(saved) as FinanceData;
+      }
+      if (!oldData) return emptyFinanceData();
+      const cleaned = removeSampleRecords(JSON.parse(oldData) as FinanceData);
+      localStorage.setItem(localKey, JSON.stringify(cleaned));
+      localStorage.removeItem(oldSampleKey);
+      return cleaned;
     } catch {
-      return demoData;
+      try {
+        localStorage.removeItem(oldSampleKey);
+      } catch {
+        // Storage can be unavailable in private browsing contexts.
+      }
+      return emptyFinanceData();
     }
   }
   private async save(

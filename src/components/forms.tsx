@@ -96,7 +96,6 @@ export function AccountDialog({
           <input
             id="account-name"
             className="input"
-            placeholder="Ex.: Nubank"
             required
             {...register("name")}
           />
@@ -108,7 +107,6 @@ export function AccountDialog({
           <input
             id="account-bank"
             className="input"
-            placeholder="Ex.: Nubank"
             required
             {...register("institution")}
           />
@@ -218,7 +216,6 @@ export function BenefitDialog({
           <input
             id="benefit-name"
             className="input"
-            placeholder="Ex.: Vale Alimentação"
             required
             {...register("name")}
           />
@@ -230,7 +227,6 @@ export function BenefitDialog({
           <input
             id="benefit-company"
             className="input"
-            placeholder="Ex.: Pluxee"
             required
             {...register("company")}
           />
@@ -378,7 +374,6 @@ export function TransactionDialog({
           <input
             id="tx-description"
             className="input"
-            placeholder="Ex.: Supermercado"
             required
             {...register("description")}
           />
@@ -392,7 +387,6 @@ export function TransactionDialog({
               id="tx-amount"
               className="input"
               inputMode="decimal"
-              placeholder="0,00"
               required
               {...register("amount")}
             />
