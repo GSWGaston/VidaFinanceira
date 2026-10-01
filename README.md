@@ -30,6 +30,8 @@ Não configure service role key no navegador. Nunca envie `.env.local` ao Git.
 
 A integração de leitura com Pluggy conecta instituições, importa contas, saldos e transações e permite sincronizar e desconectar. Requer Supabase e credenciais Pluggy configuradas no servidor. Em desenvolvimento o widget inclui Sandbox; em produção, conectores Sandbox ficam ocultos. Veja [configuração e teste Sandbox](docs/OPEN_FINANCE.md).
 
+O resumo de crédito usa limites informados no cadastro manual ou campos de crédito disponíveis no modelo de contas. A integração Pluggy atual não importa limites; contas sem dados de limite não geram valores de crédito fictícios. A migration `account_credit_overview` deve ser aplicada ao Supabase para persistir novos limites. Cartões que compartilham uma linha de crédito são somados uma vez quando possuem o mesmo `credit_line_id` na mesma conexão; sem esse identificador, não é possível confirmar o compartilhamento automaticamente.
+
 ## Comandos
 
 | Comando             | Ação              |

@@ -80,6 +80,10 @@ type AccountRow = {
   external_id: string | null;
   provider_balance_cents: number | null;
   last_synced_at: string | null;
+  credit_limit_cents?: number | null;
+  credit_available_cents?: number | null;
+  credit_used_cents?: number | null;
+  credit_line_id?: string | null;
 };
 type ConnectionRow = {
   id: string;
@@ -118,13 +122,25 @@ export class SupabaseRepository implements FinanceRepository {
     private userId: string,
   ) {}
   async load(): Promise<FinanceData> {
-    const [accounts, benefits, transactions, connections] = await Promise.all([
-      this.client
+    const accountColumns =
+      "id,name,institution,kind,opening_balance_cents,color,active,source,financial_connection_id,external_id,provider_balance_cents,last_synced_at";
+    const loadAccounts = async () => {
+      const result = await this.client
         .from("accounts")
         .select(
-          "id,name,institution,kind,opening_balance_cents,color,active,source,financial_connection_id,external_id,provider_balance_cents,last_synced_at",
+          `${accountColumns},credit_limit_cents,credit_available_cents,credit_used_cents,credit_line_id`,
         )
-        .order("created_at"),
+        .order("created_at");
+      // Existing deployments remain readable until the migration is applied.
+      if (result.error?.code === "42703" || result.error?.code === "PGRST204")
+        return this.client
+          .from("accounts")
+          .select(accountColumns)
+          .order("created_at");
+      return result;
+    };
+    const [accounts, benefits, transactions, connections] = await Promise.all([
+      loadAccounts(),
       this.client
         .from("benefit_accounts")
         .select(
@@ -165,6 +181,10 @@ export class SupabaseRepository implements FinanceRepository {
         externalId: row.external_id,
         providerBalanceCents: row.provider_balance_cents,
         lastSyncedAt: row.last_synced_at,
+        creditLimitCents: row.credit_limit_cents ?? null,
+        creditAvailableCents: row.credit_available_cents ?? null,
+        creditUsedCents: row.credit_used_cents ?? null,
+        creditLineId: row.credit_line_id ?? null,
       })),
       benefits: ((benefits.data ?? []) as BenefitRow[]).map((row) => ({
         id: row.id,
@@ -211,6 +231,16 @@ export class SupabaseRepository implements FinanceRepository {
       opening_balance_cents: item.openingBalanceCents,
       color: item.color,
       active: item.active,
+      ...(item.creditLimitCents != null && {
+        credit_limit_cents: item.creditLimitCents,
+      }),
+      ...(item.creditAvailableCents != null && {
+        credit_available_cents: item.creditAvailableCents,
+      }),
+      ...(item.creditUsedCents != null && {
+        credit_used_cents: item.creditUsedCents,
+      }),
+      ...(item.creditLineId && { credit_line_id: item.creditLineId }),
     });
     if (error) throw error;
   }

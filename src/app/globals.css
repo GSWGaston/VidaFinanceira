@@ -218,6 +218,54 @@ button:disabled {
   color: #ffffffb8;
   font-size: 12px;
 }
+.credit-summary {
+  margin-top: 8px;
+  padding-top: 7px;
+  border-top: 1px solid #ffffff35;
+}
+.credit-summary-top,
+.credit-summary-bottom {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: space-between;
+  gap: 8px;
+  color: #ffffffd9;
+  font-size: 11px;
+  font-weight: 700;
+}
+.credit-summary-amount {
+  font-size: 12px;
+  font-weight: 800;
+  text-align: right;
+}
+.credit-summary-amount > span:not(:first-child) {
+  color: #ffffffc4;
+  font-size: 11px;
+  font-weight: 600;
+}
+.credit-progress {
+  height: 3px;
+  margin-top: 5px;
+  overflow: hidden;
+  border-radius: 99px;
+  background: #ffffff3d;
+}
+.credit-progress span {
+  display: block;
+  height: 100%;
+  border-radius: inherit;
+  background: #d9f3c5;
+}
+.credit-summary-bottom {
+  margin-top: 4px;
+  color: #ffffffb8;
+  font-size: 10px;
+  font-weight: 600;
+}
+.available-balance .credit-summary-note {
+  margin-top: 3px;
+  font-size: 10px;
+}
 .financial-summary {
   display: grid;
   grid-template-columns: repeat(3, minmax(0, 1fr));
@@ -719,6 +767,16 @@ button:disabled {
   .available-balance p {
     margin-top: 1px;
     font-size: 11px;
+  }
+  .credit-summary {
+    margin-top: 6px;
+    padding-top: 6px;
+  }
+  .credit-summary-top {
+    font-size: 10px;
+  }
+  .credit-summary-amount {
+    font-size: 10px;
   }
   .financial-summary {
     border-radius: 16px;

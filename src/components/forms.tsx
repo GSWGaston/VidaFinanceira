@@ -18,6 +18,8 @@ type AccountFields = {
   kind: Account["kind"];
   openingBalance: string;
   color: string;
+  creditLimit?: string;
+  creditAvailable?: string;
 };
 type BenefitFields = {
   name: string;
@@ -72,6 +74,8 @@ export function AccountDialog({
         openingBalanceCents: result.data.openingBalance,
         color: result.data.color,
         active: true,
+        creditLimitCents: result.data.creditLimit,
+        creditAvailableCents: result.data.creditAvailable,
       });
       reset();
       onOpenChange(false);
@@ -147,6 +151,32 @@ export function AccountDialog({
             className="h-10 w-16 cursor-pointer"
             {...register("color")}
           />
+        </div>
+        <div className="grid grid-cols-2 gap-3">
+          <div>
+            <label className="label" htmlFor="account-credit-limit">
+              Limite de crédito (R$)
+            </label>
+            <input
+              id="account-credit-limit"
+              className="input"
+              inputMode="decimal"
+              placeholder="Opcional"
+              {...register("creditLimit")}
+            />
+          </div>
+          <div>
+            <label className="label" htmlFor="account-credit-available">
+              Crédito disponível (R$)
+            </label>
+            <input
+              id="account-credit-available"
+              className="input"
+              inputMode="decimal"
+              placeholder="Opcional"
+              {...register("creditAvailable")}
+            />
+          </div>
         </div>
         {error && <ErrorText message={error} />}
         <button className="btn btn-primary w-full" disabled={busy}>

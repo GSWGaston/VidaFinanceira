@@ -4,20 +4,46 @@ const money = z
   .string()
   .min(1)
   .transform((value) => parseMoney(value));
-export const accountSchema = z.object({
-  name: z.string().trim().min(2).max(80),
-  institution: z.string().trim().min(2).max(80),
-  kind: z.enum([
-    "checking",
-    "savings",
-    "digital",
-    "cash",
-    "investment",
-    "other",
-  ]),
-  openingBalance: money,
-  color: z.string().regex(/^#[0-9a-fA-F]{6}$/),
-});
+const optionalNonnegativeMoney = z
+  .union([z.literal(""), money.pipe(z.number().int().nonnegative())])
+  .optional()
+  .transform((value) => (value === "" || value === undefined ? null : value));
+export const accountSchema = z
+  .object({
+    name: z.string().trim().min(2).max(80),
+    institution: z.string().trim().min(2).max(80),
+    kind: z.enum([
+      "checking",
+      "savings",
+      "digital",
+      "cash",
+      "investment",
+      "other",
+    ]),
+    openingBalance: money,
+    color: z.string().regex(/^#[0-9a-fA-F]{6}$/),
+    creditLimit: optionalNonnegativeMoney,
+    creditAvailable: optionalNonnegativeMoney,
+  })
+  .superRefine((account, context) => {
+    if ((account.creditLimit === null) !== (account.creditAvailable === null)) {
+      context.addIssue({
+        code: "custom",
+        message: "Informe o limite total e o disponível juntos.",
+        path: ["creditLimit"],
+      });
+    } else if (
+      account.creditLimit !== null &&
+      account.creditAvailable !== null &&
+      account.creditAvailable > account.creditLimit
+    ) {
+      context.addIssue({
+        code: "custom",
+        message: "O crédito disponível não pode superar o limite total.",
+        path: ["creditAvailable"],
+      });
+    }
+  });
 export const benefitSchema = z.object({
   name: z.string().trim().min(2).max(80),
   company: z.string().trim().min(2).max(80),

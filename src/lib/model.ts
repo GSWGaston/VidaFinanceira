@@ -11,6 +11,10 @@ export type Account = {
   externalId?: string | null;
   providerBalanceCents?: number | null;
   lastSyncedAt?: string | null;
+  creditLimitCents?: number | null;
+  creditAvailableCents?: number | null;
+  creditUsedCents?: number | null;
+  creditLineId?: string | null;
 };
 export type FinancialConnection = {
   id: string;

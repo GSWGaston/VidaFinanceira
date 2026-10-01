@@ -16,6 +16,7 @@ import { AccountCarousel } from "./account-carousel";
 import { AccountDialog } from "./forms";
 import { Badge, LoadingCards, Money } from "./ui";
 import { balanceFor, categoryExpenses, dashboardTotals } from "@/lib/finance";
+import { creditOverview, type CreditOverview } from "@/lib/credit";
 import { formatMoney } from "@/lib/money";
 
 const colors = [
@@ -31,6 +32,7 @@ export function Dashboard() {
   const { data, loading, error, reload } = useApp();
   const [accountDialogOpen, setAccountDialogOpen] = useState(false);
   const totals = dashboardTotals(data);
+  const credit = creditOverview(data);
   const now = new Date();
   const month = `${now.getFullYear()}-${String(now.getMonth() + 1).padStart(2, "0")}`;
   const categories = categoryExpenses(data.transactions, month);
@@ -38,7 +40,7 @@ export function Dashboard() {
     .sort((a, b) => b.date.localeCompare(a.date))
     .slice(0, 4);
   return (
-    <div className="dashboard space-y-5 sm:space-y-7">
+    <div className="dashboard space-y-3 sm:space-y-7">
       <header className="dashboard-heading">
         <div>
           <p className="eyebrow">
@@ -92,6 +94,7 @@ export function Dashboard() {
                     ? "conta ativa"
                     : "contas ativas"}
                 </p>
+                {credit && <CreditSummary credit={credit} />}
               </div>
             </div>
             <FinancialSummary totals={totals} />
@@ -137,6 +140,44 @@ export function Dashboard() {
         open={accountDialogOpen}
         onOpenChange={setAccountDialogOpen}
       />
+    </div>
+  );
+}
+
+function CreditSummary({ credit }: { credit: CreditOverview }) {
+  const percentage = Math.round(credit.usagePercentage);
+  return (
+    <div className="credit-summary">
+      <div className="credit-summary-top">
+        <span>Crédito disponível</span>
+        <span className="credit-summary-amount">
+          <Money cents={credit.availableCents} />
+          <span> de </span>
+          <Money cents={credit.totalCents} />
+        </span>
+      </div>
+      <div
+        className="credit-progress"
+        role="progressbar"
+        aria-label="Limite de crédito utilizado"
+        aria-valuemin={0}
+        aria-valuemax={100}
+        aria-valuenow={percentage}
+      >
+        <span style={{ width: `${credit.usagePercentage}%` }} />
+      </div>
+      <div className="credit-summary-bottom">
+        <span>
+          <Money cents={credit.usedCents} /> utilizado
+        </span>
+        <span>{percentage}% utilizado</span>
+      </div>
+      {credit.incompleteLines > 0 && (
+        <p className="credit-summary-note">
+          Limites conhecidos de {credit.knownLines}{" "}
+          {credit.knownLines === 1 ? "linha" : "linhas"}
+        </p>
+      )}
     </div>
   );
 }
