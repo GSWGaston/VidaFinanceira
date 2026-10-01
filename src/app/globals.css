@@ -151,3 +151,756 @@ button:disabled {
 .safe-bottom {
   padding-bottom: env(safe-area-inset-bottom);
 }
+
+.dashboard-heading {
+  display: flex;
+  align-items: end;
+  justify-content: space-between;
+  gap: 16px;
+}
+.dashboard-heading .page-title {
+  margin-top: 3px;
+}
+.dashboard-transactions-link,
+.panel-link {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  color: var(--primary);
+  font-size: 13px;
+  font-weight: 800;
+  white-space: nowrap;
+}
+.financial-overview {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) 1.35fr;
+  gap: 16px;
+}
+.available-balance {
+  position: relative;
+  overflow: hidden;
+  min-height: 174px;
+  border-radius: 22px;
+  background: #176e55;
+  color: #fff;
+  padding: 24px;
+  box-shadow: 0 15px 35px #145f4733;
+}
+.available-balance-decoration {
+  position: absolute;
+  right: -36px;
+  top: -62px;
+  width: 150px;
+  height: 150px;
+  border: 25px solid #ffffff18;
+  border-radius: 999px;
+}
+.available-balance-label {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  color: #ffffffcf;
+  font-size: 14px;
+  font-weight: 700;
+}
+.available-balance-value {
+  display: block;
+  margin-top: 25px;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  font-size: clamp(27px, 3vw, 36px);
+  font-weight: 850;
+  letter-spacing: -0.055em;
+}
+.available-balance p {
+  margin: 5px 0 0;
+  color: #ffffffb8;
+  font-size: 12px;
+}
+.financial-summary {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  border: 1px solid var(--border);
+  border-radius: 20px;
+  background: var(--surface);
+  box-shadow: 0 7px 28px #163b2808;
+}
+.financial-summary-item {
+  min-width: 0;
+  padding: 24px 18px;
+}
+.financial-summary-item + .financial-summary-item {
+  border-left: 1px solid var(--border);
+}
+.financial-summary-item span {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  color: var(--muted);
+  font-size: 13px;
+  font-weight: 750;
+}
+.financial-summary-item.income span {
+  color: var(--primary);
+}
+.financial-summary-item.expense span {
+  color: var(--danger);
+}
+.financial-summary-item > span + span {
+  display: block;
+  margin-top: 18px;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  color: var(--foreground);
+  font-size: clamp(18px, 2vw, 26px);
+  font-weight: 850;
+  letter-spacing: -0.04em;
+}
+.financial-summary-item.income > span + span {
+  color: var(--primary);
+}
+.accounts-section {
+  padding-top: 4px;
+}
+.accounts-section-heading,
+.panel-heading {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+}
+.accounts-section-heading h2,
+.panel-heading h2 {
+  margin: 2px 0 0;
+  font-size: 19px;
+  font-weight: 850;
+  letter-spacing: -0.03em;
+}
+.accounts-section-actions {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+}
+.accounts-more {
+  min-height: 38px;
+  padding: 6px 9px;
+  font-size: 16px;
+  line-height: 1;
+  letter-spacing: 1px;
+}
+.accounts-add {
+  min-height: 38px;
+  padding: 7px 12px;
+  font-size: 13px;
+  white-space: nowrap;
+}
+.account-area {
+  margin-top: 14px;
+}
+.account-carousel {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 14px;
+  padding: 4px 2px;
+  overflow: visible;
+  touch-action: pan-y;
+}
+.account-carousel::-webkit-scrollbar {
+  display: none;
+}
+.account-bank-card {
+  position: relative;
+  display: flex;
+  width: min(100%, 340px);
+  aspect-ratio: 85.6 / 53.98;
+  flex: 0 0 auto;
+  flex-direction: column;
+  justify-content: space-between;
+  overflow: hidden;
+  border: 0;
+  border-radius: 20px;
+  background: var(--card-bg);
+  color: var(--card-fg);
+  padding: 18px;
+  text-align: left;
+  box-shadow: 0 14px 26px #152d251f;
+  transition:
+    transform 0.25s ease,
+    opacity 0.25s ease,
+    filter 0.25s ease;
+}
+.account-bank-card::after {
+  content: "";
+  position: absolute;
+  right: -44px;
+  bottom: -62px;
+  width: 148px;
+  height: 148px;
+  border: 24px solid #ffffff17;
+  border-radius: 50%;
+}
+.account-bank-card[data-pattern="cross"]::after {
+  width: 120px;
+  height: 120px;
+  right: 17px;
+  bottom: 8px;
+  border: 32px solid #ffffff55;
+  border-radius: 18px;
+  transform: rotate(45deg);
+}
+.account-bank-card[data-pattern="blocks"]::after {
+  width: 125px;
+  height: 125px;
+  right: -20px;
+  bottom: -32px;
+  border: 0;
+  border-radius: 22px;
+  background: #0000001a;
+  transform: rotate(35deg);
+}
+.account-bank-card[data-pattern="diagonal"]::after {
+  width: 160px;
+  height: 120px;
+  right: -48px;
+  bottom: -28px;
+  border: 0;
+  border-radius: 0;
+  background: repeating-linear-gradient(
+    135deg,
+    #ffffff20 0 2px,
+    transparent 2px 18px
+  );
+  transform: rotate(-14deg);
+}
+.account-bank-card[data-pattern="organic"]::after {
+  width: 140px;
+  height: 120px;
+  right: -24px;
+  bottom: -30px;
+  border: 0;
+  border-radius: 40% 70% 48% 62%;
+  background: #ffffff2c;
+  transform: rotate(-23deg);
+}
+.account-bank-card > * {
+  position: relative;
+  z-index: 1;
+}
+.account-card-top,
+.account-card-footer {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+  font-size: 12px;
+  font-weight: 750;
+}
+.account-card-top > span:first-child {
+  max-width: 65%;
+}
+.account-card-mode {
+  border-radius: 999px;
+  background: #ffffffdf;
+  color: #18332c;
+  padding: 5px 9px;
+  font-size: 11px;
+}
+.account-card-amount {
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  font-size: clamp(25px, 2.8vw, 32px);
+  font-weight: 850;
+  letter-spacing: -0.055em;
+}
+.account-card-subline {
+  width: max-content;
+  max-width: 100%;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  border-radius: 8px;
+  background: #ffffff22;
+  color: var(--card-fg);
+  padding: 5px 8px;
+  font-size: 11px;
+  font-weight: 700;
+}
+.financial-card-list-item {
+  width: min(100%, 340px);
+}
+.financial-card-list-item .account-bank-card {
+  width: 100%;
+}
+.account-card-footer {
+  color: var(--card-muted);
+}
+.account-card-footer strong {
+  color: var(--card-fg);
+  font-size: 16px;
+  letter-spacing: -0.08em;
+}
+.account-dots {
+  display: flex;
+  justify-content: center;
+  gap: 6px;
+  margin: 10px 0 12px;
+}
+.account-dots button {
+  width: 7px;
+  height: 7px;
+  padding: 0;
+  border: 0;
+  border-radius: 99px;
+  background: var(--border);
+  transition:
+    width 0.2s ease,
+    background 0.2s ease;
+}
+.account-dots button.active {
+  width: 20px;
+  background: var(--primary);
+}
+.selected-account-details {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 16px;
+  padding: 15px 17px;
+}
+.selected-account-details h3 {
+  margin: 3px 0 2px;
+  font-size: 15px;
+  font-weight: 800;
+}
+.selected-account-meta {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: flex-end;
+  gap: 6px;
+  max-width: 46%;
+}
+.selected-account-meta span {
+  border-radius: 999px;
+  background: var(--soft);
+  color: var(--primary);
+  padding: 5px 8px;
+  font-size: 10px;
+  font-weight: 750;
+  white-space: nowrap;
+}
+.account-empty {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 16px;
+  padding: 18px;
+}
+.account-empty > div:first-child {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+.account-empty h3 {
+  margin: 0;
+  font-size: 15px;
+}
+.account-empty p {
+  margin: 3px 0 0;
+  font-size: 12px;
+}
+.account-empty-icon {
+  display: grid;
+  width: 38px;
+  height: 38px;
+  flex: 0 0 auto;
+  place-items: center;
+  border-radius: 12px;
+  background: var(--soft);
+  color: var(--primary);
+}
+.account-empty-actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 7px;
+  justify-content: flex-end;
+}
+.account-empty-actions .btn {
+  min-height: 37px;
+  padding: 7px 11px;
+  font-size: 12px;
+  white-space: nowrap;
+}
+.dashboard-grid-top,
+.dashboard-grid-bottom {
+  display: grid;
+  grid-template-columns: 1.5fr 1fr;
+  gap: 16px;
+}
+.dashboard-panel {
+  min-width: 0;
+  padding: 22px;
+}
+.category-content {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  margin-top: 14px;
+}
+.category-chart {
+  width: 52%;
+  height: 210px;
+}
+.category-list {
+  flex: 1;
+  display: grid;
+  gap: 10px;
+}
+.category-list > div,
+.benefit-list > div {
+  display: flex;
+  justify-content: space-between;
+  gap: 9px;
+  font-size: 13px;
+  font-weight: 700;
+}
+.category-list span {
+  display: flex;
+  min-width: 0;
+  align-items: center;
+  gap: 7px;
+}
+.category-list i {
+  width: 8px;
+  height: 8px;
+  flex: 0 0 auto;
+  border-radius: 50%;
+}
+.benefits-value {
+  display: block;
+  margin-top: 20px;
+  font-size: 30px;
+  font-weight: 850;
+  letter-spacing: -0.05em;
+}
+.benefit-list {
+  display: grid;
+  gap: 8px;
+  margin-top: 16px;
+}
+.benefit-list > div {
+  border-radius: 10px;
+  background: var(--background);
+  padding: 9px 10px;
+}
+.benefits-empty {
+  margin: 15px 0 0;
+  color: var(--muted);
+  font-size: 13px;
+}
+.benefits-panel .panel-link,
+.upcoming-panel .panel-link {
+  margin-top: 16px;
+}
+.compact-empty {
+  padding: 20px 0 3px;
+}
+.compact-empty strong {
+  font-size: 14px;
+}
+.compact-empty p {
+  margin: 4px 0 0;
+  color: var(--muted);
+  font-size: 13px;
+  line-height: 1.45;
+}
+.recent-list {
+  display: grid;
+  margin-top: 12px;
+}
+.recent-list > div {
+  display: grid;
+  grid-template-columns: 36px minmax(0, 1fr) auto;
+  align-items: center;
+  gap: 10px;
+  border-top: 1px solid var(--border);
+  padding: 11px 0;
+}
+.recent-list > div:first-child {
+  border-top: 0;
+}
+.recent-list > div > span:first-child {
+  display: grid;
+  width: 36px;
+  height: 36px;
+  place-items: center;
+  border-radius: 11px;
+}
+.income-icon {
+  color: var(--primary);
+  background: #e6f4e8;
+}
+.expense-icon {
+  color: var(--danger);
+  background: #f9eeea;
+}
+.recent-list strong,
+.recent-list small {
+  display: block;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+.recent-list strong {
+  font-size: 13px;
+}
+.recent-list small {
+  margin-top: 2px;
+  color: var(--muted);
+  font-size: 11px;
+}
+.recent-list > div > span:last-child {
+  font-size: 13px;
+  font-weight: 800;
+  white-space: nowrap;
+}
+.income-value {
+  color: var(--primary);
+}
+.upcoming-panel {
+  display: flex;
+  min-height: 100%;
+  flex-direction: column;
+}
+.upcoming-panel > p {
+  margin: 18px 0 0;
+  font-size: 13px;
+  line-height: 1.5;
+}
+.upcoming-panel .panel-link {
+  margin-top: auto;
+  padding-top: 18px;
+}
+@media (max-width: 767px) {
+  .dashboard-heading {
+    align-items: center;
+  }
+  .dashboard-heading .page-title {
+    font-size: 25px;
+  }
+  .dashboard-transactions-link {
+    font-size: 12px;
+  }
+  .financial-overview {
+    grid-template-columns: 1fr;
+    gap: 10px;
+  }
+  .available-balance {
+    min-height: 116px;
+    padding: 15px 17px;
+    border-radius: 18px;
+  }
+  .available-balance-decoration {
+    right: -40px;
+    top: -80px;
+    width: 130px;
+    height: 130px;
+    border-width: 22px;
+  }
+  .available-balance-label {
+    font-size: 12px;
+  }
+  .available-balance-value {
+    margin-top: 11px;
+    font-size: 29px;
+  }
+  .available-balance p {
+    margin-top: 1px;
+    font-size: 11px;
+  }
+  .financial-summary {
+    border-radius: 16px;
+  }
+  .financial-summary-item {
+    padding: 12px 10px;
+  }
+  .financial-summary-item span {
+    gap: 4px;
+    font-size: 10px;
+  }
+  .financial-summary-item span svg {
+    width: 13px;
+    height: 13px;
+  }
+  .financial-summary-item > span + span {
+    margin-top: 6px;
+    font-size: 15px;
+  }
+  .accounts-section-heading h2 {
+    font-size: 17px;
+    white-space: nowrap;
+  }
+  .accounts-section-actions {
+    margin-left: auto;
+  }
+  .accounts-more {
+    display: none;
+  }
+  .account-area {
+    margin-top: 10px;
+  }
+  .account-carousel {
+    position: relative;
+    display: flex;
+    gap: 0;
+    width: calc(100% + 40px);
+    margin-left: -20px;
+    padding: 2px 0;
+    overflow: hidden;
+    height: calc(min(84vw, 336px) * 53.98 / 85.6 + 4px);
+    align-items: center;
+    justify-content: center;
+  }
+  .account-bank-card {
+    position: absolute;
+    width: min(84vw, 336px);
+    padding: 16px 17px;
+    pointer-events: auto;
+  }
+  .account-bank-card[data-side="0"] {
+    z-index: 3;
+    transform: translateX(0) scale(1);
+    opacity: 1;
+    filter: none;
+  }
+  .account-bank-card[data-side="-1"] {
+    z-index: 2;
+    transform: translateX(-72%) scale(0.92);
+    opacity: 0.62;
+    filter: blur(1.5px);
+  }
+  .account-bank-card[data-side="1"] {
+    z-index: 2;
+    transform: translateX(72%) scale(0.92);
+    opacity: 0.62;
+    filter: blur(1.5px);
+  }
+  .account-bank-card[data-side="-2"],
+  .account-bank-card[data-side="2"] {
+    z-index: 1;
+    transform: translateX(0) scale(0.86);
+    opacity: 0;
+    pointer-events: none;
+  }
+  .account-card-amount {
+    font-size: 27px;
+  }
+  .account-card-top,
+  .account-card-footer {
+    font-size: 11px;
+  }
+  .account-card-mode {
+    padding: 4px 8px;
+    font-size: 10px;
+  }
+  .account-dots {
+    margin: 8px 0 10px;
+  }
+  .selected-account-details {
+    padding: 12px 14px;
+    border-radius: 16px;
+  }
+  .selected-account-details h3 {
+    font-size: 14px;
+  }
+  .selected-account-meta {
+    display: none;
+  }
+  .account-empty {
+    align-items: flex-start;
+    flex-direction: column;
+    padding: 15px;
+    border-radius: 16px;
+  }
+  .account-empty-actions {
+    justify-content: flex-start;
+  }
+  .dashboard-grid-top,
+  .dashboard-grid-bottom {
+    grid-template-columns: 1fr;
+    gap: 12px;
+  }
+  .dashboard-panel {
+    padding: 16px;
+    border-radius: 16px;
+  }
+  .panel-heading h2 {
+    font-size: 16px;
+  }
+  .category-content {
+    margin-top: 6px;
+  }
+  .category-chart {
+    width: 47%;
+    height: 154px;
+  }
+  .category-list {
+    gap: 7px;
+  }
+  .category-list > div {
+    font-size: 12px;
+  }
+  .benefits-value {
+    margin-top: 12px;
+    font-size: 25px;
+  }
+  .benefit-list {
+    margin-top: 11px;
+  }
+  .benefits-panel .panel-link,
+  .upcoming-panel .panel-link {
+    margin-top: 12px;
+  }
+  .recent-list > div {
+    padding: 9px 0;
+  }
+  .upcoming-panel {
+    min-height: 0;
+  }
+  .upcoming-panel .panel-link {
+    margin-top: 0;
+    padding-top: 14px;
+  }
+}
+@media (min-width: 768px) {
+  .account-carousel {
+    flex-wrap: wrap;
+    overflow: visible;
+  }
+  .account-bank-card {
+    min-width: 0;
+  }
+  .account-dots {
+    display: none;
+  }
+}
+@media (prefers-reduced-motion: reduce) {
+  .account-bank-card,
+  .account-dots button {
+    transition: none;
+  }
+}
+@media (max-width: 1023px) {
+  .app-header {
+    height: calc(60px + env(safe-area-inset-top));
+    padding-top: env(safe-area-inset-top);
+  }
+  .local-notice {
+    line-height: 1.35;
+  }
+  .safe-bottom {
+    padding-bottom: max(env(safe-area-inset-bottom), 4px);
+  }
+}

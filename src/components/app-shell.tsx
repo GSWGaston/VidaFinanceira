@@ -48,6 +48,7 @@ export function AppShell({ children }: { children: React.ReactNode }) {
   const [more, setMore] = useState(false);
   const [transactionOpen, setTransactionOpen] = useState(false);
   const [dark, setDark] = useState(false);
+  const [localNotice, setLocalNotice] = useState(true);
   function toggleTheme() {
     const next = !dark;
     setDark(next);
@@ -90,7 +91,7 @@ export function AppShell({ children }: { children: React.ReactNode }) {
         </div>
       </aside>
       <div className="min-w-0 flex-1">
-        <header className="sticky top-0 z-20 flex h-[72px] items-center justify-between border-b border-border bg-surface/95 px-5 backdrop-blur sm:px-9">
+        <header className="app-header sticky top-0 z-20 flex h-[72px] items-center justify-between border-b border-border bg-surface/95 px-5 backdrop-blur sm:px-9">
           <Link
             href="/"
             className="flex items-center gap-2 text-lg font-extrabold lg:hidden"
@@ -125,10 +126,19 @@ export function AppShell({ children }: { children: React.ReactNode }) {
           </div>
         </header>
         <main className="mx-auto max-w-[1450px] px-5 pb-32 pt-7 sm:px-9 lg:pb-14 lg:pt-10">
-          {local && (
-            <div className="mb-6 rounded-xl border border-[#cce5d3] bg-[#ecf7ee] px-4 py-2.5 text-xs font-medium text-[#326e48]">
-              Seus dados são salvos somente neste navegador. Configure o
-              Supabase para sincronização e acesso com uma conta.
+          {local && localNotice && (
+            <div className="local-notice mb-4 flex items-start justify-between gap-3 rounded-xl border border-[#cce5d3] bg-[#ecf7ee] px-3 py-2 text-xs font-medium text-[#326e48] sm:mb-6 sm:px-4 sm:py-2.5">
+              <span>
+                Seus dados são salvos somente neste navegador. Configure o
+                Supabase para sincronização e acesso com uma conta.
+              </span>
+              <button
+                aria-label="Fechar aviso de dados locais"
+                className="shrink-0 font-extrabold"
+                onClick={() => setLocalNotice(false)}
+              >
+                <X size={15} />
+              </button>
             </div>
           )}
           {children}

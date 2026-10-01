@@ -1,13 +1,6 @@
 "use client";
-import { useEffect, useMemo, useState } from "react";
-import {
-  ArrowDownLeft,
-  ArrowUpRight,
-  Landmark,
-  Plus,
-  Search,
-  WalletCards,
-} from "lucide-react";
+import { useEffect, useMemo, useState, type CSSProperties } from "react";
+import { ArrowDownLeft, ArrowUpRight, Plus, Search } from "lucide-react";
 import { useApp } from "./app-provider";
 import { AccountDialog, BenefitDialog, TransactionDialog } from "./forms";
 import { EmptyState, LoadingCards, Money, Badge } from "./ui";
@@ -17,6 +10,8 @@ import { categories } from "@/lib/model";
 import { supabase } from "@/lib/repository";
 import { toast } from "sonner";
 import { OpenFinanceControls } from "./open-finance-connect";
+import { FinancialCardFace } from "./account-carousel";
+import { bankTheme, institutionTheme } from "@/lib/bank-themes";
 function PageHeader({
   eyebrow,
   title,
@@ -134,24 +129,34 @@ export function AccountsPage() {
             </section>
           )}
           {data.accounts.length ? (
-            <div className="grid gap-4 md:grid-cols-2 xl:grid-cols-3">
+            <div className="flex flex-wrap gap-4">
               {data.accounts.map((item) => (
-                <div className="card p-6" key={item.id}>
-                  <div className="flex items-start justify-between">
-                    <span
-                      className="grid size-11 place-items-center rounded-xl text-white"
-                      style={{ background: item.color }}
-                    >
-                      <Landmark size={21} />
-                    </span>
+                <div className="financial-card-list-item" key={item.id}>
+                  <div
+                    className="account-bank-card"
+                    data-pattern={bankTheme(item).pattern}
+                    style={
+                      {
+                        "--card-bg": bankTheme(item).background,
+                        "--card-fg": bankTheme(item).foreground,
+                        "--card-muted": bankTheme(item).muted,
+                      } as CSSProperties
+                    }
+                  >
+                    <FinancialCardFace
+                      institution={item.institution}
+                      name={item.name}
+                      amount={balanceFor(data, item.id, "account")}
+                      secondary={accountKinds[item.kind]}
+                      theme={bankTheme(item)}
+                    />
+                  </div>
+                  <div className="mt-2 flex items-center justify-between text-xs">
+                    <span className="muted">{item.institution}</span>
                     <Badge color={item.active ? "green" : "gray"}>
                       {item.active ? "Ativa" : "Inativa"}
                     </Badge>
                   </div>
-                  <h2 className="mt-5 text-lg font-extrabold">{item.name}</h2>
-                  <p className="muted text-xs">
-                    {item.institution} · {accountKinds[item.kind]}
-                  </p>
                   {item.source === "open_finance" && (
                     <p className="muted mt-2 text-xs">
                       Open Finance
@@ -161,13 +166,6 @@ export function AccountsPage() {
                         : ""}
                     </p>
                   )}
-                  <div className="mt-6 border-t border-border pt-4">
-                    <p className="muted text-xs">Saldo atual</p>
-                    <Money
-                      cents={balanceFor(data, item.id, "account")}
-                      className="mt-1 block text-2xl font-extrabold"
-                    />
-                  </div>
                 </div>
               ))}
             </div>
@@ -216,28 +214,39 @@ export function BenefitsPage() {
             </p>
           </div>
           {data.benefits.length ? (
-            <div className="grid gap-4 md:grid-cols-2 xl:grid-cols-3">
+            <div className="flex flex-wrap gap-4">
               {data.benefits.map((item) => (
-                <div className="card p-6" key={item.id}>
-                  <div className="flex items-start justify-between">
-                    <span className="grid size-11 place-items-center rounded-xl bg-[#d9ebf2] text-[#295d74]">
-                      <WalletCards size={22} />
-                    </span>
-                    <Badge>{benefitKinds[item.kind]}</Badge>
-                  </div>
-                  <h2 className="mt-5 text-lg font-extrabold">{item.name}</h2>
-                  <p className="muted text-xs">{item.company}</p>
-                  <div className="mt-6 border-t border-border pt-4">
-                    <p className="muted text-xs">Saldo atual</p>
-                    <Money
-                      cents={balanceFor(data, item.id, "benefit")}
-                      className="mt-1 block text-2xl font-extrabold"
+                <div className="financial-card-list-item" key={item.id}>
+                  <div
+                    className="account-bank-card"
+                    data-pattern={
+                      institutionTheme(item.company, item.name).pattern
+                    }
+                    style={
+                      {
+                        "--card-bg": institutionTheme(item.company, item.name)
+                          .background,
+                        "--card-fg": institutionTheme(item.company, item.name)
+                          .foreground,
+                        "--card-muted": institutionTheme(
+                          item.company,
+                          item.name,
+                        ).muted,
+                      } as CSSProperties
+                    }
+                  >
+                    <FinancialCardFace
+                      institution={item.company}
+                      name={item.name}
+                      amount={balanceFor(data, item.id, "benefit")}
+                      secondary={benefitKinds[item.kind]}
+                      theme={institutionTheme(item.company, item.name)}
                     />
-                    <p className="muted mt-3 text-xs">
-                      Crédito mensal: <Money cents={item.monthlyCreditCents} />
-                      {item.creditDay ? ` · dia ${item.creditDay}` : ""}
-                    </p>
                   </div>
+                  <p className="muted mt-2 text-xs">
+                    Crédito mensal: <Money cents={item.monthlyCreditCents} />
+                    {item.creditDay ? ` · dia ${item.creditDay}` : ""}
+                  </p>
                 </div>
               ))}
             </div>
