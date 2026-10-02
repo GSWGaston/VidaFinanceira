@@ -8,29 +8,32 @@ import {
   ArrowUpRight,
   Banknote,
   CalendarClock,
+  CreditCard,
+  ListFilter,
+  Plus,
+  CalendarRange,
   WalletCards,
 } from "lucide-react";
 import { Cell, Pie, PieChart, ResponsiveContainer, Tooltip } from "recharts";
 import { useApp } from "./app-provider";
-import { AccountCarousel } from "./account-carousel";
-import { AccountDialog } from "./forms";
+import { TransactionDialog } from "./forms";
 import { Badge, LoadingCards, Money } from "./ui";
 import { balanceFor, categoryExpenses, dashboardTotals } from "@/lib/finance";
 import { creditOverview, type CreditOverview } from "@/lib/credit";
 import { formatMoney } from "@/lib/money";
 
 const colors = [
-  "#227b5d",
-  "#a8cf81",
-  "#e8b565",
-  "#8fbac8",
-  "#aa9ccb",
-  "#d18f7c",
+  "var(--chart-1)",
+  "var(--chart-2)",
+  "var(--chart-3)",
+  "var(--chart-4)",
+  "var(--chart-5)",
+  "var(--chart-6)",
 ];
 
 export function Dashboard() {
   const { data, loading, error, reload } = useApp();
-  const [accountDialogOpen, setAccountDialogOpen] = useState(false);
+  const [transactionOpen, setTransactionOpen] = useState(false);
   const totals = dashboardTotals(data);
   const credit = creditOverview(data);
   const now = new Date();
@@ -38,25 +41,9 @@ export function Dashboard() {
   const categories = categoryExpenses(data.transactions, month);
   const recent = [...data.transactions]
     .sort((a, b) => b.date.localeCompare(a.date))
-    .slice(0, 4);
+    .slice(0, 3);
   return (
-    <div className="dashboard space-y-3 sm:space-y-7">
-      <header className="dashboard-heading">
-        <div>
-          <p className="eyebrow">
-            {new Intl.DateTimeFormat("pt-BR", {
-              month: "long",
-              year: "numeric",
-            })
-              .format(now)
-              .toUpperCase()}
-          </p>
-          <h1 className="page-title">Visão geral</h1>
-        </div>
-        <Link className="dashboard-transactions-link" href="/transactions">
-          Transações <ArrowRight size={15} />
-        </Link>
-      </header>
+    <div className="dashboard home-dashboard">
       {error && (
         <div role="alert" className="card p-4 text-sm">
           {error}{" "}
@@ -69,25 +56,19 @@ export function Dashboard() {
         </div>
       )}
       {loading ? (
-        <LoadingCards />
+        <div className="space-y-4">
+          <div className="home-hero animate-pulse" aria-hidden="true" />
+          <LoadingCards />
+        </div>
       ) : (
         <>
-          <section
-            className="financial-overview"
-            aria-label="Resumo financeiro"
-          >
-            <div className="available-balance">
-              <div className="available-balance-decoration" />
-              <div className="relative">
-                <div className="available-balance-label">
-                  <span>Saldo disponível</span>
-                  <Banknote size={19} />
-                </div>
-                <Money
-                  cents={totals.balance}
-                  className="available-balance-value"
-                />
-                <p>
+          <section className="home-hero" aria-label="Resumo financeiro">
+            <div className="home-hero-content">
+              <div className="home-hero-balance">
+                <p className="home-hero-eyebrow">Sua visão geral</p>
+                <h1>Saldo disponível</h1>
+                <Money cents={totals.balance} className="home-hero-value" />
+                <p className="home-hero-count">
                   Em {data.accounts.filter((account) => account.active).length}{" "}
                   {data.accounts.filter((account) => account.active).length ===
                   1
@@ -96,50 +77,71 @@ export function Dashboard() {
                 </p>
                 {credit && <CreditSummary credit={credit} />}
               </div>
+              <QuickActions onNewTransaction={() => setTransactionOpen(true)} />
             </div>
-            <FinancialSummary totals={totals} />
+            <span id="home-hero-sentinel" aria-hidden="true" />
           </section>
-          <section className="accounts-section">
-            <div className="accounts-section-heading">
-              <div>
-                <p className="eyebrow">SEU DINHEIRO</p>
-                <h2>Contas & cartões</h2>
+          <div className="home-content-grid">
+            <section className="home-monthly" aria-label="Resumo do mês">
+              <div className="home-section-heading">
+                <p className="eyebrow">ESTE MÊS</p>
+                <span className="muted text-xs">
+                  {new Intl.DateTimeFormat("pt-BR", {
+                    month: "long",
+                    year: "numeric",
+                  }).format(now)}
+                </span>
               </div>
-              <div className="accounts-section-actions">
-                <Link
-                  href="/accounts"
-                  aria-label="Ver e conectar contas"
-                  className="btn btn-ghost accounts-more"
-                >
-                  •••
-                </Link>
-                <button
-                  onClick={() => setAccountDialogOpen(true)}
-                  className="btn btn-outline accounts-add"
-                >
-                  + Conta
-                </button>
-              </div>
-            </div>
-            <AccountCarousel
-              data={data}
-              onAddManual={() => setAccountDialogOpen(true)}
+              <FinancialSummary totals={totals} />
+            </section>
+            <CategoryCard
+              categories={categories}
+              onNewExpense={() => setTransactionOpen(true)}
             />
-          </section>
-          <div className="dashboard-grid-top">
-            <CategoryCard categories={categories} />
             <BenefitsCard cents={totals.benefits} data={data} />
-          </div>
-          <div className="dashboard-grid-bottom">
             <RecentTransactions recent={recent} />
             <UpcomingExpenses />
           </div>
         </>
       )}
-      <AccountDialog
-        open={accountDialogOpen}
-        onOpenChange={setAccountDialogOpen}
+      <TransactionDialog
+        open={transactionOpen}
+        onOpenChange={setTransactionOpen}
       />
+    </div>
+  );
+}
+
+function QuickActions({ onNewTransaction }: { onNewTransaction: () => void }) {
+  const actions = [
+    { label: "Cartões", icon: CreditCard, href: "/cards" },
+    { label: "Gastos", icon: ListFilter, href: "/transactions?type=expense" },
+  ];
+  return (
+    <div className="home-quick-actions" aria-label="Ações rápidas">
+      {actions.slice(0, 2).map(({ label, icon: Icon, href }) => (
+        <Link key={label} href={href} className="home-quick-action">
+          <span>
+            <Icon size={19} />
+          </span>
+          {label}
+        </Link>
+      ))}
+      <button
+        className="home-quick-action home-quick-action-main"
+        onClick={onNewTransaction}
+      >
+        <span>
+          <Plus size={21} />
+        </span>
+        Lançar
+      </button>
+      <Link href="/planning" className="home-quick-action">
+        <span>
+          <CalendarRange size={19} />
+        </span>
+        Planejar
+      </Link>
     </div>
   );
 }
@@ -210,7 +212,10 @@ function FinancialSummary({
   return (
     <div className="financial-summary">
       {items.map((item) => (
-        <div className={`financial-summary-item ${item.kind}`} key={item.title}>
+        <div
+          className={`financial-summary-item ${item.kind} ${item.kind === "result" ? (item.cents < 0 ? "negative" : "positive") : ""}`}
+          key={item.title}
+        >
           <span>
             {item.icon}
             {item.title}
@@ -224,8 +229,10 @@ function FinancialSummary({
 
 function CategoryCard({
   categories,
+  onNewExpense,
 }: {
   categories: ReturnType<typeof categoryExpenses>;
+  onNewExpense: () => void;
 }) {
   return (
     <section className="card dashboard-panel">
@@ -262,7 +269,7 @@ function CategoryCard({
             </ResponsiveContainer>
           </div>
           <div className="category-list">
-            {categories.slice(0, 5).map((item, index) => (
+            {categories.slice(0, 4).map((item, index) => (
               <div key={item.name}>
                 <span>
                   <i style={{ background: colors[index % colors.length] }} />
@@ -274,10 +281,20 @@ function CategoryCard({
           </div>
         </div>
       ) : (
-        <CompactEmpty
-          title="Sem gastos neste mês"
-          description="Adicione uma despesa para visualizar suas categorias."
-        />
+        <>
+          <CompactEmpty
+            title="Sem gastos neste mês"
+            description="Adicione uma despesa para visualizar suas categorias."
+          />
+          <button className="panel-link mt-2" onClick={onNewExpense}>
+            + Registrar gasto
+          </button>
+        </>
+      )}
+      {categories.length > 0 && (
+        <Link href="/reports" className="panel-link mt-4">
+          Ver relatório <ArrowRight size={15} />
+        </Link>
       )}
     </section>
   );
@@ -300,22 +317,25 @@ function BenefitsCard({
         </div>
         <WalletCards className="text-primary" size={20} />
       </div>
-      <Money cents={cents} className="benefits-value" />
-      <p className="muted text-xs">Separados do saldo disponível</p>
       {benefits.length ? (
-        <div className="benefit-list">
-          {benefits.map((item) => (
-            <div key={item.id}>
-              <span>{item.name}</span>
-              <Money cents={balanceFor(data, item.id, "benefit")} />
-            </div>
-          ))}
-        </div>
+        <>
+          <Money cents={cents} className="benefits-value" />
+          <p className="muted text-xs">Separados do saldo disponível</p>
+          <div className="benefit-list">
+            {benefits.map((item) => (
+              <div key={item.id}>
+                <span>{item.name}</span>
+                <Money cents={balanceFor(data, item.id, "benefit")} />
+              </div>
+            ))}
+          </div>
+        </>
       ) : (
         <p className="benefits-empty">Nenhum benefício cadastrado.</p>
       )}
       <Link href="/benefits" className="panel-link">
-        Ver benefícios <ArrowRight size={15} />
+        {benefits.length ? "Ver benefícios" : "Adicionar benefício"}{" "}
+        <ArrowRight size={15} />
       </Link>
     </section>
   );

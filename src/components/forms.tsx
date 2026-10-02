@@ -47,13 +47,15 @@ function ErrorText({ message }: { message: string }) {
 export function AccountDialog({
   open,
   onOpenChange,
+  mode = "account",
 }: {
   open: boolean;
   onOpenChange: (open: boolean) => void;
+  mode?: "account" | "card";
 }) {
   const { addAccount } = useApp();
   const { register, handleSubmit, reset } = useForm<AccountFields>({
-    defaultValues: { kind: "checking", openingBalance: "0", color: "#176e55" },
+    defaultValues: { kind: "checking", openingBalance: "0", color: "#7a3e2b" },
   });
   const [error, setError] = useState("");
   const [busy, setBusy] = useState(false);
@@ -62,6 +64,13 @@ export function AccountDialog({
     const result = accountSchema.safeParse(raw);
     if (!result.success) {
       setError(result.error.issues[0].message);
+      return;
+    }
+    if (
+      mode === "card" &&
+      (result.data.creditLimit === null || result.data.creditAvailable === null)
+    ) {
+      setError("Informe o limite total e o crédito disponível do cartão.");
       return;
     }
     setBusy(true);
@@ -89,13 +98,17 @@ export function AccountDialog({
     <DialogFrame
       open={open}
       onOpenChange={onOpenChange}
-      title="Nova conta"
-      description="Cadastre uma conta para acompanhar seu saldo."
+      title={mode === "card" ? "Novo cartão manual" : "Nova conta"}
+      description={
+        mode === "card"
+          ? "Vincule o cartão a uma conta manual e informe seu limite real."
+          : "Cadastre uma conta para acompanhar seu saldo."
+      }
     >
       <form onSubmit={handleSubmit(submit)} className="space-y-4">
         <div>
           <label className="label" htmlFor="account-name">
-            Nome da conta
+            {mode === "card" ? "Nome do cartão" : "Nome da conta"}
           </label>
           <input
             id="account-name"
@@ -130,7 +143,9 @@ export function AccountDialog({
           </div>
           <div>
             <label className="label" htmlFor="account-balance">
-              Saldo inicial (R$)
+              {mode === "card"
+                ? "Saldo da conta vinculada (R$)"
+                : "Saldo inicial (R$)"}
             </label>
             <input
               id="account-balance"
@@ -161,7 +176,7 @@ export function AccountDialog({
               id="account-credit-limit"
               className="input"
               inputMode="decimal"
-              placeholder="Opcional"
+              placeholder={mode === "card" ? "Obrigatório" : "Opcional"}
               {...register("creditLimit")}
             />
           </div>
@@ -173,14 +188,18 @@ export function AccountDialog({
               id="account-credit-available"
               className="input"
               inputMode="decimal"
-              placeholder="Opcional"
+              placeholder={mode === "card" ? "Obrigatório" : "Opcional"}
               {...register("creditAvailable")}
             />
           </div>
         </div>
         {error && <ErrorText message={error} />}
         <button className="btn btn-primary w-full" disabled={busy}>
-          {busy ? "Salvando…" : "Salvar conta"}
+          {busy
+            ? "Salvando…"
+            : mode === "card"
+              ? "Salvar cartão"
+              : "Salvar conta"}
         </button>
       </form>
     </DialogFrame>

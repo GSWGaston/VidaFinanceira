@@ -30,9 +30,9 @@ describe("institution themes", () => {
     expect(normalizeInstitutionName(institution)).toBe(expected);
   });
 
-  it("uses a readable VidaFinanceira fallback for an unknown institution", () => {
+  it("uses a readable Ordinnum fallback for an unknown institution", () => {
     const theme = institutionTheme("Banco Novo");
-    expect(theme.background).toContain("#176e55");
+    expect(theme.background).toContain("#7a3e2b");
     expect(theme.foreground).toBe("#fff");
     expect(theme.mark).toBe("BA");
   });

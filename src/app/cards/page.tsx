@@ -1,4 +1,4 @@
-import { RoadmapPage } from "@/components/roadmap-page";
+import { AccountsCardsPage } from "@/components/accounts-cards-page";
 export default function Page() {
-  return <RoadmapPage name="cards" />;
+  return <AccountsCardsPage defaultTab="cards" />;
 }

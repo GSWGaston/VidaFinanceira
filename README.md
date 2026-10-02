@@ -1,4 +1,4 @@
-# VidaFinanceira
+# Ordinnum
 
 Aplicação web responsiva para acompanhar a vida financeira pessoal. A primeira versão funcional reúne contas, benefícios e transações em um Dashboard. Benefícios como VA e VR aparecem separados do dinheiro livre.
 

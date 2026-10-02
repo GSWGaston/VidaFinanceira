@@ -1,7 +1,7 @@
 "use client";
 import { useState } from "react";
-import { CircleDollarSign } from "lucide-react";
 import { supabase } from "@/lib/repository";
+import { Brand } from "./brand";
 export function AuthGate() {
   const [mode, setMode] = useState<"login" | "signup" | "reset">("login");
   const [email, setEmail] = useState("");
@@ -40,9 +40,8 @@ export function AuthGate() {
   return (
     <main className="min-h-screen grid place-items-center p-5">
       <div className="card w-full max-w-md p-8">
-        <div className="mb-7 flex items-center gap-3 text-primary">
-          <CircleDollarSign size={34} />
-          <span className="text-xl font-extrabold">VidaFinanceira</span>
+        <div className="mb-7">
+          <Brand auth />
         </div>
         <h1 className="page-title">
           {mode === "login"

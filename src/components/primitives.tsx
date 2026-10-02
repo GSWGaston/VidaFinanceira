@@ -44,7 +44,7 @@ export function Sheet({
   return (
     <Dialog.Root open={open} onOpenChange={onOpenChange}>
       <Dialog.Portal>
-        <Dialog.Overlay className="fixed inset-0 z-40 bg-[#09251f99]" />
+        <Dialog.Overlay className="fixed inset-0 z-40 bg-[var(--overlay)]" />
         <Dialog.Content className="safe-bottom fixed inset-x-0 bottom-0 z-50 max-h-[85dvh] overflow-auto rounded-t-[28px] bg-surface p-6 shadow-2xl">
           <div className="mb-5 flex items-center justify-between">
             <Dialog.Title className="text-xl font-extrabold">
@@ -104,7 +104,7 @@ export function Tabs({
           <TabsPrimitive.Trigger
             key={item.value}
             value={item.value}
-            className="min-h-10 flex-1 rounded-lg px-3 text-sm font-bold text-muted data-[state=active]:bg-surface data-[state=active]:text-primary data-[state=active]:shadow-sm"
+            className="min-h-10 flex-1 rounded-lg px-3 text-sm font-bold text-muted data-[state=active]:bg-surface data-[state=active]:text-accent-text data-[state=active]:ring-1 data-[state=active]:ring-accent data-[state=active]:shadow-sm"
           >
             {item.label}
           </TabsPrimitive.Trigger>

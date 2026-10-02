@@ -9,7 +9,7 @@ export type CreditOverview = {
   incompleteLines: number;
 };
 
-function creditLine(account: Account) {
+export function creditLineForAccount(account: Account) {
   const total = account.creditLimitCents;
   const available = account.creditAvailableCents;
   const used = account.creditUsedCents;
@@ -27,7 +27,7 @@ function creditLine(account: Account) {
 }
 
 export function creditOverview(data: FinanceData): CreditOverview | null {
-  const lines = new Map<string, ReturnType<typeof creditLine>>();
+  const lines = new Map<string, ReturnType<typeof creditLineForAccount>>();
   for (const account of data.accounts) {
     if (!account.active) continue;
     const hasCredit =
@@ -39,7 +39,7 @@ export function creditOverview(data: FinanceData): CreditOverview | null {
     const key = account.creditLineId?.trim()
       ? `${account.connectionId ?? "manual"}:${account.creditLineId.trim()}`
       : account.id;
-    const complete = creditLine(account);
+    const complete = creditLineForAccount(account);
     const previous = lines.get(key);
     if (previous === undefined || (!previous && complete))
       lines.set(key, complete);

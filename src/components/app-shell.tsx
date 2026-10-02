@@ -4,8 +4,6 @@ import { usePathname } from "next/navigation";
 import {
   BarChart3,
   CalendarRange,
-  CircleDollarSign,
-  CreditCard,
   Download,
   House,
   Landmark,
@@ -22,16 +20,18 @@ import {
   Sun,
   Moon,
 } from "lucide-react";
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { useApp } from "./app-provider";
 import { TransactionDialog } from "./forms";
+import { Brand } from "./brand";
+import { dashboardTotals } from "@/lib/finance";
+import { formatMoney } from "@/lib/money";
 const navigation = [
   { href: "/", label: "Início", icon: House },
   { href: "/transactions", label: "Transações", icon: Repeat2 },
   { href: "/planning", label: "Planejamento", icon: CalendarRange },
   { href: "/reports", label: "Relatórios", icon: BarChart3 },
-  { href: "/accounts", label: "Contas", icon: Landmark },
-  { href: "/cards", label: "Cartões", icon: CreditCard },
+  { href: "/accounts", label: "Contas & cartões", icon: Landmark },
   { href: "/benefits", label: "Benefícios", icon: WalletCards },
   { href: "/budgets", label: "Orçamentos", icon: LayoutGrid },
   { href: "/goals", label: "Metas", icon: Target },
@@ -44,11 +44,23 @@ const navigation = [
 const mainMobile = navigation.slice(0, 4);
 export function AppShell({ children }: { children: React.ReactNode }) {
   const path = usePathname();
-  const { local } = useApp();
+  const { local, data, loading } = useApp();
   const [more, setMore] = useState(false);
   const [transactionOpen, setTransactionOpen] = useState(false);
   const [dark, setDark] = useState(false);
   const [localNotice, setLocalNotice] = useState(true);
+  const [homeCompact, setHomeCompact] = useState(false);
+  useEffect(() => {
+    if (path !== "/" || loading) return;
+    const sentinel = document.getElementById("home-hero-sentinel");
+    if (!sentinel) return;
+    const observer = new IntersectionObserver(
+      ([entry]) => setHomeCompact(entry.boundingClientRect.top <= 60),
+      { rootMargin: "-60px 0px 0px 0px" },
+    );
+    observer.observe(sentinel);
+    return () => observer.disconnect();
+  }, [path, loading]);
   function toggleTheme() {
     const next = !dark;
     setDark(next);
@@ -57,14 +69,8 @@ export function AppShell({ children }: { children: React.ReactNode }) {
   return (
     <div className="min-h-screen lg:flex">
       <aside className="hidden lg:flex lg:sticky lg:top-0 lg:h-screen lg:w-[252px] lg:shrink-0 lg:flex-col border-r border-border bg-surface px-4 py-7">
-        <Link
-          href="/"
-          className="flex items-center gap-2 px-3 text-[19px] font-extrabold tracking-tight"
-        >
-          <span className="grid size-9 place-items-center rounded-xl bg-primary text-white">
-            <CircleDollarSign size={23} />
-          </span>
-          Vida<span className="text-primary">Financeira</span>
+        <Link href="/" className="flex h-10 items-center px-3">
+          <Brand />
         </Link>
         <p className="eyebrow mt-11 px-3">MENU PRINCIPAL</p>
         <nav
@@ -76,7 +82,7 @@ export function AppShell({ children }: { children: React.ReactNode }) {
               key={href}
               href={href}
               aria-current={path === href ? "page" : undefined}
-              className={`flex min-h-10 items-center gap-3 rounded-xl px-3 text-[13px] font-semibold transition-colors ${path === href ? "bg-soft text-primary" : "text-muted hover:bg-background hover:text-foreground"}`}
+              className={`flex min-h-10 items-center gap-3 rounded-xl px-3 text-[13px] font-semibold transition-colors ${path === href ? "sidebar-link-active bg-soft text-primary" : "text-muted hover:bg-background hover:text-foreground"}`}
             >
               <Icon size={18} strokeWidth={path === href ? 2.4 : 1.9} />
               {label}
@@ -91,14 +97,20 @@ export function AppShell({ children }: { children: React.ReactNode }) {
         </div>
       </aside>
       <div className="min-w-0 flex-1">
-        <header className="app-header sticky top-0 z-20 flex h-[72px] items-center justify-between border-b border-border bg-surface/95 px-5 backdrop-blur sm:px-9">
-          <Link
-            href="/"
-            className="flex items-center gap-2 text-lg font-extrabold lg:hidden"
-          >
-            <CircleDollarSign className="text-primary" size={26} />
-            Vida<span className="text-primary">Financeira</span>
+        <header
+          className={`app-header sticky top-0 z-20 flex h-[72px] items-center justify-between border-b border-border bg-surface/95 px-5 backdrop-blur sm:px-9 ${path === "/" ? "home-app-header" : ""} ${homeCompact ? "home-app-header-compact" : ""}`}
+        >
+          <Link href="/" className="flex items-center lg:hidden">
+            <Brand compact />
           </Link>
+          {path === "/" && homeCompact && (
+            <span
+              className="home-header-balance lg:hidden"
+              aria-label="Saldo disponível"
+            >
+              {formatMoney(dashboardTotals(data).balance)}
+            </span>
+          )}
           <div className="hidden lg:block">
             <p className="text-xs font-semibold text-muted">
               Seu espaço financeiro
@@ -126,8 +138,8 @@ export function AppShell({ children }: { children: React.ReactNode }) {
           </div>
         </header>
         <main className="mx-auto max-w-[1450px] px-5 pb-32 pt-7 sm:px-9 lg:pb-14 lg:pt-10">
-          {local && localNotice && (
-            <div className="local-notice mb-4 flex items-start justify-between gap-3 rounded-xl border border-[#cce5d3] bg-[#ecf7ee] px-3 py-2 text-xs font-medium text-[#326e48] sm:mb-6 sm:px-4 sm:py-2.5">
+          {local && localNotice && path !== "/" && (
+            <div className="local-notice mb-4 flex items-start justify-between gap-3 rounded-xl border border-border bg-surface-secondary px-3 py-2 text-xs font-medium text-primary sm:mb-6 sm:px-4 sm:py-2.5">
               <span>
                 Seus dados são salvos somente neste navegador. Configure o
                 Supabase para sincronização e acesso com uma conta.
@@ -153,7 +165,7 @@ export function AppShell({ children }: { children: React.ReactNode }) {
             key={href}
             href={href}
             aria-current={path === href ? "page" : undefined}
-            className={`flex min-h-[61px] flex-1 flex-col items-center justify-center gap-1 text-[10px] font-bold ${path === href ? "text-primary" : "text-muted"}`}
+            className={`flex min-h-[61px] flex-1 flex-col items-center justify-center gap-1 text-[10px] font-bold ${path === href ? "mobile-nav-active text-primary" : "text-muted"}`}
           >
             <Icon size={21} />
             {label === "Planejamento" ? "Planejar" : label}
@@ -169,7 +181,7 @@ export function AppShell({ children }: { children: React.ReactNode }) {
       </nav>
       {more && (
         <div
-          className="fixed inset-0 z-40 bg-[#0b221e88] lg:hidden"
+          className="fixed inset-0 z-40 bg-[var(--overlay)] lg:hidden"
           onClick={() => setMore(false)}
         >
           <div
@@ -202,13 +214,15 @@ export function AppShell({ children }: { children: React.ReactNode }) {
           </div>
         </div>
       )}
-      <button
-        aria-label="Nova transação"
-        onClick={() => setTransactionOpen(true)}
-        className="fixed bottom-[76px] right-5 z-20 grid size-12 place-items-center rounded-full bg-primary text-white shadow-xl sm:hidden lg:hidden"
-      >
-        <Plus size={23} />
-      </button>
+      {path !== "/" && (
+        <button
+          aria-label="Nova transação"
+          onClick={() => setTransactionOpen(true)}
+          className="fixed bottom-[76px] right-5 z-20 grid size-12 place-items-center rounded-full bg-accent text-accent-foreground shadow-xl sm:hidden lg:hidden"
+        >
+          <Plus size={23} />
+        </button>
+      )}
       <TransactionDialog
         open={transactionOpen}
         onOpenChange={setTransactionOpen}

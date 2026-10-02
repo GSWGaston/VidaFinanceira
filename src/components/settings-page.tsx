@@ -21,9 +21,7 @@ export function SettingsPage() {
     <div>
       <p className="eyebrow mb-2">PREFERÊNCIAS</p>
       <h1 className="page-title">Configurações</h1>
-      <p className="muted mt-2 text-sm">
-        Gerencie seu acesso ao VidaFinanceira.
-      </p>
+      <p className="muted mt-2 text-sm">Gerencie seu acesso ao Ordinnum.</p>
       <div className="mt-7 grid max-w-3xl gap-4">
         <div className="card p-6">
           <div className="flex items-center gap-3">

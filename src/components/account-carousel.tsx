@@ -1,21 +1,36 @@
 "use client";
 
-import { Landmark, Plus } from "lucide-react";
+import { ArrowRight, Landmark, Plus } from "lucide-react";
 import Link from "next/link";
 import { useRef, useState, type CSSProperties } from "react";
 import { bankTheme, type BankTheme } from "@/lib/bank-themes";
 import { balanceFor } from "@/lib/finance";
+import { creditLineForAccount } from "@/lib/credit";
 import { accountKinds, type Account, type FinanceData } from "@/lib/model";
 import { Money } from "./ui";
+import { OpenFinanceControls } from "./open-finance-connect";
 
-type Props = { data: FinanceData; onAddManual: () => void };
+type Props = {
+  data: FinanceData;
+  onAddManual: () => void;
+  variant?: "account" | "credit";
+};
 
-export function AccountCarousel({ data, onAddManual }: Props) {
-  const accounts = data.accounts.filter((account) => account.active);
+export function AccountCarousel({
+  data,
+  onAddManual,
+  variant = "account",
+}: Props) {
+  const accounts = data.accounts.filter(
+    (account) =>
+      account.active &&
+      (variant === "account" || creditLineForAccount(account)),
+  );
   const [selected, setSelected] = useState(0);
   const start = useRef<number | null>(null);
   const dragged = useRef(false);
-  if (!accounts.length) return <EmptyAccounts onAddManual={onAddManual} />;
+  if (!accounts.length)
+    return <EmptyAccounts onAddManual={onAddManual} variant={variant} />;
   const selectedIndex = Math.min(selected, accounts.length - 1);
   const active = accounts[selectedIndex];
   const move = (direction: number) =>
@@ -40,7 +55,10 @@ export function AccountCarousel({ data, onAddManual }: Props) {
     start.current = null;
   };
   return (
-    <section aria-label="Contas e cartões" className="account-area">
+    <section
+      aria-label={variant === "credit" ? "Cartões de crédito" : "Contas"}
+      className="account-area"
+    >
       <div
         className="account-carousel"
         onPointerDown={pointerDown}
@@ -53,7 +71,12 @@ export function AccountCarousel({ data, onAddManual }: Props) {
           <AccountCard
             key={account.id}
             account={account}
-            balance={balanceFor(data, account.id, "account")}
+            balance={
+              variant === "credit"
+                ? creditLineForAccount(account)!.available
+                : balanceFor(data, account.id, "account")
+            }
+            variant={variant}
             selected={index === selectedIndex}
             offset={index - selectedIndex}
             onSelect={() => {
@@ -75,7 +98,7 @@ export function AccountCarousel({ data, onAddManual }: Props) {
           ))}
         </div>
       )}
-      <SelectedDetails account={active} data={data} />
+      <SelectedDetails account={active} data={data} variant={variant} />
     </section>
   );
 }
@@ -83,12 +106,14 @@ export function AccountCarousel({ data, onAddManual }: Props) {
 function AccountCard({
   account,
   balance,
+  variant,
   selected,
   offset,
   onSelect,
 }: {
   account: Account;
   balance: number;
+  variant: "account" | "credit";
   selected: boolean;
   offset: number;
   onSelect: () => void;
@@ -98,7 +123,7 @@ function AccountCard({
   return (
     <button
       type="button"
-      aria-label={`Selecionar conta ${account.name}`}
+      aria-label={`Selecionar ${variant === "credit" ? "cartão" : "conta"} ${account.name}`}
       aria-pressed={selected}
       onClick={onSelect}
       className="account-bank-card"
@@ -117,7 +142,12 @@ function AccountCard({
         institution={account.institution}
         name={account.name}
         amount={balance}
-        secondary={accountKinds[account.kind]}
+        secondary={
+          variant === "credit"
+            ? "Crédito disponível"
+            : accountKinds[account.kind]
+        }
+        mode={variant === "credit" ? "Crédito" : "Saldo"}
         theme={theme}
       />
     </button>
@@ -130,18 +160,20 @@ export function FinancialCardFace({
   amount,
   secondary,
   theme,
+  mode = "Saldo",
 }: {
   institution: string;
   name: string;
   amount: number;
   secondary: string;
   theme: BankTheme;
+  mode?: string;
 }) {
   return (
     <>
       <div className="account-card-top">
         <span className="truncate">{institution}</span>
-        <span className="account-card-mode">Saldo</span>
+        <span className="account-card-mode">{mode}</span>
       </div>
       <Money cents={amount} className="account-card-amount" />
       <div className="account-card-subline">{secondary}</div>
@@ -156,9 +188,11 @@ export function FinancialCardFace({
 function SelectedDetails({
   account,
   data,
+  variant,
 }: {
   account: Account;
   data: FinanceData;
+  variant: "account" | "credit";
 }) {
   const linked = data.transactions.filter(
     (transaction) => transaction.accountId === account.id,
@@ -166,14 +200,55 @@ function SelectedDetails({
   const connection = data.connections?.find(
     (item) => item.id === account.connectionId,
   );
+  const credit = creditLineForAccount(account);
   return (
     <div className="selected-account-details card">
-      <div>
-        <p className="eyebrow">Conta selecionada</p>
+      <div className="selected-account-main">
+        <p className="eyebrow">
+          {variant === "credit" ? "Cartão selecionado" : "Conta selecionada"}
+        </p>
         <h3 className="truncate">{account.name}</h3>
         <p className="muted truncate text-xs">
           {account.institution} · {accountKinds[account.kind]}
         </p>
+        <div className="selected-account-stats">
+          {variant === "account" ? (
+            <div>
+              <span>Saldo em conta</span>
+              <Money cents={balanceFor(data, account.id, "account")} />
+            </div>
+          ) : credit ? (
+            <>
+              <div>
+                <span>Limite total</span>
+                <Money cents={credit.total} />
+              </div>
+              <div>
+                <span>Utilizado</span>
+                <Money cents={credit.used} />
+              </div>
+              <div>
+                <span>Disponível</span>
+                <Money cents={credit.available} />
+              </div>
+            </>
+          ) : null}
+          <div>
+            <span>Movimentações</span>
+            <strong>
+              {linked.length} {linked.length === 1 ? "registro" : "registros"}
+            </strong>
+          </div>
+        </div>
+        {account.lastSyncedAt && (
+          <p className="muted text-xs">
+            Última sincronização:{" "}
+            {new Date(account.lastSyncedAt).toLocaleString("pt-BR")}
+          </p>
+        )}
+        <Link href="/transactions" className="panel-link mt-3">
+          Ver transações <ArrowRight size={15} />
+        </Link>
       </div>
       <div className="selected-account-meta">
         <span>
@@ -190,11 +265,26 @@ function SelectedDetails({
           </span>
         )}
       </div>
+      {connection && connection.status !== "disconnected" && (
+        <div className="selected-account-manage">
+          <p className="eyebrow">GERENCIAR CONEXÃO</p>
+          <OpenFinanceControls
+            connectionId={connection.id}
+            itemId={connection.providerItemId}
+          />
+        </div>
+      )}
     </div>
   );
 }
 
-function EmptyAccounts({ onAddManual }: { onAddManual: () => void }) {
+function EmptyAccounts({
+  onAddManual,
+  variant,
+}: {
+  onAddManual: () => void;
+  variant: "account" | "credit";
+}) {
   return (
     <div className="account-empty card">
       <div>
@@ -202,16 +292,26 @@ function EmptyAccounts({ onAddManual }: { onAddManual: () => void }) {
           <Landmark size={18} />
         </span>
         <div>
-          <h3>Você ainda não adicionou uma conta.</h3>
-          <p className="muted">Conecte seu banco ou crie uma conta manual.</p>
+          <h3>
+            {variant === "credit"
+              ? "Nenhum cartão com limite disponível."
+              : "Você ainda não adicionou uma conta."}
+          </h3>
+          <p className="muted">
+            {variant === "credit"
+              ? "Cadastre um cartão manual com limite conhecido."
+              : "Conecte seu banco ou crie uma conta manual."}
+          </p>
         </div>
       </div>
       <div className="account-empty-actions">
-        <Link className="btn btn-outline" href="/accounts">
-          Conectar banco
-        </Link>
+        {variant === "account" && (
+          <Link className="btn btn-outline" href="/accounts">
+            Conectar banco
+          </Link>
+        )}
         <button className="btn btn-primary" onClick={onAddManual}>
-          <Plus size={16} /> Conta
+          <Plus size={16} /> {variant === "credit" ? "Cartão" : "Conta"}
         </button>
       </div>
     </div>

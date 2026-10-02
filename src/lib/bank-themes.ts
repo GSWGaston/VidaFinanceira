@@ -211,9 +211,9 @@ export function institutionTheme(institution: string, name = ""): BankTheme {
   return key
     ? themes[key]
     : {
-        background: "linear-gradient(135deg,#176e55,#0c5942)",
+        background: "linear-gradient(135deg,#7a3e2b,#5e3025)",
         foreground: "#fff",
-        muted: "#dcf4e9",
+        muted: "#f5ded5",
         mark: institution.trim().slice(0, 2).toUpperCase() || "VF",
         pattern: "circle",
       };

@@ -30,7 +30,7 @@ export function Badge({
 }) {
   return (
     <span
-      className={`inline-flex rounded-full px-2.5 py-1 text-[11px] font-bold ${color === "green" ? "bg-[#e8f5ec] text-[#21724b]" : color === "red" ? "bg-[#faeae8] text-[#ab534e]" : "bg-background text-muted"}`}
+      className={`inline-flex rounded-full px-2.5 py-1 text-[11px] font-bold ${color === "green" ? "bg-[var(--success-soft)] text-success" : color === "red" ? "bg-[var(--danger-soft)] text-danger" : "bg-background text-muted"}`}
     >
       {children}
     </span>
@@ -78,7 +78,7 @@ export function DialogFrame({
   return (
     <Dialog.Root open={open} onOpenChange={onOpenChange}>
       <Dialog.Portal>
-        <Dialog.Overlay className="fixed inset-0 z-40 bg-[#09251f99]" />
+        <Dialog.Overlay className="fixed inset-0 z-40 bg-[var(--overlay)]" />
         <Dialog.Content className="fixed inset-x-0 bottom-0 z-50 max-h-[95dvh] overflow-y-auto rounded-t-[28px] bg-surface p-6 shadow-2xl sm:inset-auto sm:left-1/2 sm:top-1/2 sm:w-[min(92vw,500px)] sm:-translate-x-1/2 sm:-translate-y-1/2 sm:rounded-3xl">
           <div className="mb-5 flex items-start justify-between gap-4">
             <div>

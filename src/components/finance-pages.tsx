@@ -70,7 +70,7 @@ export function AccountsPage() {
         <LoadingCards />
       ) : (
         <>
-          <div className="mb-6 rounded-[22px] bg-[#176e55] p-6 text-white">
+          <div className="account-total-banner mb-6">
             <p className="text-sm font-semibold text-white/75">
               Saldo financeiro total
             </p>
@@ -201,7 +201,7 @@ export function BenefitsPage() {
         <LoadingCards />
       ) : (
         <>
-          <div className="mb-6 rounded-[22px] bg-[#295d74] p-6 text-white">
+          <div className="benefits-total-banner mb-6">
             <p className="text-sm font-semibold text-white/75">
               Total em benefícios
             </p>
@@ -262,11 +262,15 @@ export function BenefitsPage() {
     </>
   );
 }
-export function TransactionsPage() {
+export function TransactionsPage({
+  initialType = "all",
+}: {
+  initialType?: string;
+}) {
   const { data, loading, error, reload } = useApp();
   const [open, setOpen] = useState(false);
   const [search, setSearch] = useState("");
-  const [type, setType] = useState("all");
+  const [type, setType] = useState(initialType);
   const correctCategory = async (id: string, category: string) => {
     if (!supabase) return;
     const { error } = await supabase
@@ -346,7 +350,7 @@ export function TransactionsPage() {
                   className="flex items-center gap-3 px-4 py-4 sm:px-6"
                 >
                   <div
-                    className={`grid size-10 shrink-0 place-items-center rounded-xl ${item.type === "income" ? "bg-soft text-primary" : "bg-[#faeeeb] text-danger"}`}
+                    className={`grid size-10 shrink-0 place-items-center rounded-xl ${item.type === "income" ? "bg-[var(--success-soft)] text-success" : "bg-[var(--danger-soft)] text-danger"}`}
                   >
                     {item.type === "income" ? (
                       <ArrowDownLeft size={19} />
@@ -402,7 +406,7 @@ export function TransactionsPage() {
                         ? item.amountCents
                         : -item.amountCents
                     }
-                    className={`whitespace-nowrap text-sm font-extrabold sm:text-base ${item.type === "income" ? "text-primary" : "text-foreground"}`}
+                    className={`whitespace-nowrap text-sm font-extrabold sm:text-base ${item.type === "income" ? "text-success" : "text-foreground"}`}
                   />
                 </div>
               );

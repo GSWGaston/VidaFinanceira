@@ -5,13 +5,13 @@ import { AppShell } from "@/components/app-shell";
 import "./globals.css";
 const geist = Geist({ variable: "--font-geist-sans", subsets: ["latin"] });
 export const metadata: Metadata = {
-  title: "VidaFinanceira",
+  title: "Ordinnum",
   description: "Sua vida financeira em perspectiva.",
-  applicationName: "VidaFinanceira",
+  applicationName: "Ordinnum",
   appleWebApp: {
     capable: true,
     statusBarStyle: "default",
-    title: "VidaFinanceira",
+    title: "Ordinnum",
   },
   icons: { icon: "/icon.svg", apple: "/icons/icon-192.png" },
 };
@@ -19,7 +19,10 @@ export const viewport: Viewport = {
   width: "device-width",
   initialScale: 1,
   viewportFit: "cover",
-  themeColor: "#176e55",
+  themeColor: [
+    { media: "(prefers-color-scheme: light)", color: "#fff8f6" },
+    { media: "(prefers-color-scheme: dark)", color: "#241512" },
+  ],
 };
 export default function RootLayout({
   children,
