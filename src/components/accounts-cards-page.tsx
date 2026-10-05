@@ -9,28 +9,25 @@ import {
   Plus,
   WalletCards,
 } from "lucide-react";
+import type { Account } from "@/lib/model";
 import { useApp } from "./app-provider";
-import { AccountCarousel } from "./account-carousel";
+import { CreditCardCarousel } from "./credit-card-carousel";
 import { AccountDialog, BenefitDialog } from "./forms";
 import { OpenFinanceControls } from "./open-finance-connect";
-import { Sheet, Tabs } from "./primitives";
-import { Badge, LoadingCards, Money } from "./ui";
-import { creditOverview } from "@/lib/credit";
-import { dashboardTotals } from "@/lib/finance";
+import { Sheet } from "./primitives";
+import { Badge, LoadingCards } from "./ui";
 
-export function AccountsCardsPage({
-  defaultTab = "accounts",
-}: {
-  defaultTab?: "accounts" | "cards";
-}) {
+export function AccountsCardsPage() {
   const { data, loading, error, reload } = useApp();
   const [addOpen, setAddOpen] = useState(false);
   const [accountOpen, setAccountOpen] = useState(false);
   const [cardOpen, setCardOpen] = useState(false);
+  const [editingCard, setEditingCard] = useState<Account | null>(null);
   const [benefitOpen, setBenefitOpen] = useState(false);
   const syncing =
     data.connections?.some((connection) => connection.status === "syncing") ??
     false;
+
   useEffect(() => {
     if (!syncing) return;
     let attempts = 0;
@@ -48,19 +45,20 @@ export function AccountsCardsPage({
   };
   const openCard = () => {
     setAddOpen(false);
+    setEditingCard(null);
     setCardOpen(true);
   };
   const openBenefit = () => {
     setAddOpen(false);
     setBenefitOpen(true);
   };
-  const activeAccounts = data.accounts.filter((account) => account.active);
-  const institutions = new Set(
-    activeAccounts.map((account) =>
-      account.institution.toLocaleLowerCase("pt-BR"),
-    ),
-  ).size;
-  const credit = creditOverview(data);
+  const orphanedConnections =
+    data.connections?.filter(
+      (connection) =>
+        !data.accounts.some(
+          (account) => account.active && account.connectionId === connection.id,
+        ),
+    ) ?? [];
 
   return (
     <div className="accounts-cards-page">
@@ -91,31 +89,47 @@ export function AccountsCardsPage({
       {loading ? (
         <LoadingCards />
       ) : (
-        <Tabs
-          defaultValue={defaultTab}
-          items={[
-            {
-              value: "accounts",
-              label: "Contas",
-              content: (
-                <AccountsTab
-                  data={data}
-                  balance={dashboardTotals(data).balance}
-                  institutions={institutions}
-                  onAdd={openAccount}
-                />
-              ),
-            },
-            {
-              value: "cards",
-              label: "Cartões",
-              content: (
-                <CardsTab data={data} credit={credit} onAdd={openCard} />
-              ),
-            },
-            { value: "invoices", label: "Faturas", content: <InvoicesTab /> },
-          ]}
-        />
+        <>
+          <CreditCardCarousel
+            data={data}
+            onAddManual={openCard}
+            onAddAccount={openAccount}
+            onEdit={(account) => {
+              setEditingCard(account);
+              setCardOpen(true);
+            }}
+          />
+          {orphanedConnections.length > 0 && (
+            <section className="accounts-connections">
+              <h2 className="section-title">Conexões em andamento</h2>
+              <div className="accounts-connections-list">
+                {orphanedConnections.map((connection) => (
+                  <div className="card" key={connection.id}>
+                    <div>
+                      <strong>{connection.institutionName}</strong>
+                      {connection.isSandbox && (
+                        <Badge color="gray">Ambiente de testes</Badge>
+                      )}
+                    </div>
+                    <p className="muted text-xs">
+                      {connection.status === "error"
+                        ? "Requer atenção"
+                        : connection.status === "disconnected"
+                          ? "Desconectada"
+                          : "Aguardando sincronização"}
+                    </p>
+                    {connection.status !== "disconnected" && (
+                      <OpenFinanceControls
+                        connectionId={connection.id}
+                        itemId={connection.providerItemId}
+                      />
+                    )}
+                  </div>
+                ))}
+              </div>
+            </section>
+          )}
+        </>
       )}
       <Sheet open={addOpen} onOpenChange={setAddOpen} title="Adicionar">
         <div className="accounts-add-options">
@@ -142,137 +156,14 @@ export function AccountsCardsPage({
         </div>
       </Sheet>
       <AccountDialog open={accountOpen} onOpenChange={setAccountOpen} />
-      <AccountDialog open={cardOpen} onOpenChange={setCardOpen} mode="card" />
+      <AccountDialog
+        key={editingCard?.id ?? "new-card"}
+        open={cardOpen}
+        onOpenChange={setCardOpen}
+        mode="card"
+        editingAccount={editingCard}
+      />
       <BenefitDialog open={benefitOpen} onOpenChange={setBenefitOpen} />
-    </div>
-  );
-}
-
-type Data = ReturnType<typeof useApp>["data"];
-
-function AccountsTab({
-  data,
-  balance,
-  institutions,
-  onAdd,
-}: {
-  data: Data;
-  balance: number;
-  institutions: number;
-  onAdd: () => void;
-}) {
-  return (
-    <div className="accounts-tab-content">
-      <section className="accounts-tab-summary">
-        <p>Saldo total</p>
-        <Money cents={balance} />
-        <small>
-          {institutions} {institutions === 1 ? "instituição" : "instituições"}
-        </small>
-      </section>
-      <AccountCarousel data={data} onAddManual={onAdd} />
-      {!!data.connections?.length && (
-        <section className="accounts-connections">
-          <h2 className="section-title">Instituições conectadas</h2>
-          <div className="accounts-connections-list">
-            {data.connections.map((connection) => (
-              <div className="card" key={connection.id}>
-                <div>
-                  <strong>{connection.institutionName}</strong>
-                  {connection.isSandbox && (
-                    <Badge color="gray">Ambiente de testes</Badge>
-                  )}
-                </div>
-                <p className="muted text-xs">
-                  {connection.status === "connected"
-                    ? "Conectada"
-                    : connection.status === "syncing"
-                      ? "Sincronizando"
-                      : connection.status === "error"
-                        ? "Requer atenção"
-                        : connection.status === "disconnected"
-                          ? "Desconectada"
-                          : "Aguardando autorização"}
-                  {connection.lastSyncAt
-                    ? ` · Atualizada em ${new Date(connection.lastSyncAt).toLocaleString("pt-BR")}`
-                    : ""}
-                </p>
-                {connection.status !== "disconnected" && (
-                  <OpenFinanceControls
-                    connectionId={connection.id}
-                    itemId={connection.providerItemId}
-                  />
-                )}
-              </div>
-            ))}
-          </div>
-        </section>
-      )}
-    </div>
-  );
-}
-
-function CardsTab({
-  data,
-  credit,
-  onAdd,
-}: {
-  data: Data;
-  credit: ReturnType<typeof creditOverview>;
-  onAdd: () => void;
-}) {
-  const incomplete = data.accounts.filter(
-    (account) =>
-      account.active &&
-      account.creditLimitCents != null &&
-      account.creditAvailableCents == null &&
-      account.creditUsedCents == null,
-  ).length;
-  return (
-    <div className="accounts-tab-content">
-      {credit && (
-        <section
-          className="credit-tab-summary card"
-          aria-label="Resumo do crédito"
-        >
-          <div>
-            <span>Limite total</span>
-            <Money cents={credit.totalCents} />
-          </div>
-          <div>
-            <span>Utilizado</span>
-            <Money cents={credit.usedCents} />
-          </div>
-          <div>
-            <span>Disponível</span>
-            <Money cents={credit.availableCents} />
-          </div>
-          <div className="credit-tab-progress">
-            <span style={{ width: `${credit.usagePercentage}%` }} />
-          </div>
-          <p>{Math.round(credit.usagePercentage)}% utilizado</p>
-        </section>
-      )}
-      {incomplete > 0 && (
-        <p className="muted text-xs">
-          {incomplete} {incomplete === 1 ? "cartão está" : "cartões estão"} sem
-          informação suficiente de limite.
-        </p>
-      )}
-      <AccountCarousel data={data} onAddManual={onAdd} variant="credit" />
-    </div>
-  );
-}
-
-function InvoicesTab() {
-  return (
-    <div className="card invoices-empty">
-      <p className="eyebrow">FATURAS</p>
-      <h2>Nenhuma fatura disponível</h2>
-      <p className="muted">
-        As contas conectadas e cadastradas ainda não fornecem dados de faturas.
-        Valores de limite utilizado não são tratados como fatura.
-      </p>
     </div>
   );
 }

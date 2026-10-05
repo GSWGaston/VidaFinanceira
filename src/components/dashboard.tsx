@@ -6,7 +6,6 @@ import {
   ArrowDownLeft,
   ArrowRight,
   ArrowUpRight,
-  Banknote,
   CalendarClock,
   CreditCard,
   ListFilter,
@@ -56,51 +55,73 @@ export function Dashboard() {
         </div>
       )}
       {loading ? (
-        <div className="space-y-4">
-          <div className="home-hero animate-pulse" aria-hidden="true" />
-          <LoadingCards />
+        <div aria-busy="true" aria-label="Carregando resumo financeiro">
+          <div className="home-stage-track" aria-hidden="true">
+            <div className="home-stage">
+              <div className="home-loading-balance animate-pulse" />
+              <div className="home-monthly">
+                <div className="home-loading-month animate-pulse" />
+              </div>
+            </div>
+          </div>
+          <div className="home-content-surface">
+            <div className="home-content-inner">
+              <LoadingCards />
+            </div>
+          </div>
         </div>
       ) : (
         <>
-          <section className="home-hero" aria-label="Resumo financeiro">
-            <div className="home-hero-content">
-              <div className="home-hero-balance">
-                <p className="home-hero-eyebrow">Sua visão geral</p>
-                <h1>Saldo disponível</h1>
-                <Money cents={totals.balance} className="home-hero-value" />
-                <p className="home-hero-count">
-                  Em {data.accounts.filter((account) => account.active).length}{" "}
-                  {data.accounts.filter((account) => account.active).length ===
-                  1
-                    ? "conta ativa"
-                    : "contas ativas"}
-                </p>
-                {credit && <CreditSummary credit={credit} />}
+          <div className="home-stage-track">
+            <section className="home-stage" aria-label="Resumo financeiro">
+              <div className="home-stage-inner">
+                <div className="home-balance">
+                  <h1 className="home-balance-label">Saldo Total</h1>
+                  <Money
+                    cents={totals.balance}
+                    className="home-balance-value"
+                  />
+                  <Link href="/cards" className="home-cards-pill">
+                    <CreditCard size={18} /> Cartões
+                  </Link>
+                </div>
               </div>
-              <QuickActions onNewTransaction={() => setTransactionOpen(true)} />
-            </div>
-            <span id="home-hero-sentinel" aria-hidden="true" />
-          </section>
-          <div className="home-content-grid">
-            <section className="home-monthly" aria-label="Resumo do mês">
-              <div className="home-section-heading">
-                <p className="eyebrow">ESTE MÊS</p>
-                <span className="muted text-xs">
-                  {new Intl.DateTimeFormat("pt-BR", {
-                    month: "long",
-                    year: "numeric",
-                  }).format(now)}
-                </span>
-              </div>
-              <FinancialSummary totals={totals} />
+              <section className="home-monthly" aria-label="Resumo do mês">
+                <div className="home-section-heading">
+                  <p className="eyebrow">ESTE MÊS</p>
+                  <span className="muted text-xs">
+                    {new Intl.DateTimeFormat("pt-BR", {
+                      month: "long",
+                      year: "numeric",
+                    }).format(now)}
+                  </span>
+                </div>
+                <FinancialSummary totals={totals} />
+              </section>
             </section>
-            <CategoryCard
-              categories={categories}
-              onNewExpense={() => setTransactionOpen(true)}
-            />
-            <BenefitsCard cents={totals.benefits} data={data} />
-            <RecentTransactions recent={recent} />
-            <UpcomingExpenses />
+          </div>
+          <div className="home-content-surface">
+            <div className="home-content-inner">
+              <div className="home-actions-section">
+                <h2>Ações rápidas</h2>
+                <QuickActions
+                  onNewTransaction={() => setTransactionOpen(true)}
+                />
+              </div>
+              {credit && <CreditSummary credit={credit} />}
+              <div className="home-content-grid">
+                <CategoryCard
+                  categories={categories}
+                  onNewExpense={() => setTransactionOpen(true)}
+                />
+                <RecentTransactions
+                  recent={recent}
+                  onNewTransaction={() => setTransactionOpen(true)}
+                />
+                <BenefitsCard cents={totals.benefits} data={data} />
+                <UpcomingExpenses />
+              </div>
+            </div>
           </div>
         </>
       )}
@@ -202,20 +223,11 @@ function FinancialSummary({
       kind: "expense" as const,
       icon: <ArrowUpRight size={16} />,
     },
-    {
-      title: "Resultado",
-      cents: totals.result,
-      kind: "result" as const,
-      icon: <Banknote size={16} />,
-    },
   ];
   return (
     <div className="financial-summary">
       {items.map((item) => (
-        <div
-          className={`financial-summary-item ${item.kind} ${item.kind === "result" ? (item.cents < 0 ? "negative" : "positive") : ""}`}
-          key={item.title}
-        >
+        <div className={`financial-summary-item ${item.kind}`} key={item.title}>
           <span>
             {item.icon}
             {item.title}
@@ -343,8 +355,10 @@ function BenefitsCard({
 
 function RecentTransactions({
   recent,
+  onNewTransaction,
 }: {
   recent: ReturnType<typeof useApp>["data"]["transactions"];
+  onNewTransaction: () => void;
 }) {
   return (
     <section className="card dashboard-panel">
@@ -391,10 +405,15 @@ function RecentTransactions({
           ))}
         </div>
       ) : (
-        <CompactEmpty
-          title="Ainda sem transações"
-          description="Registre uma entrada ou saída para acompanhar sua movimentação."
-        />
+        <>
+          <CompactEmpty
+            title="Ainda sem transações"
+            description="Seu histórico aparecerá aqui."
+          />
+          <button className="panel-link mt-2" onClick={onNewTransaction}>
+            Adicionar transação <ArrowRight size={15} />
+          </button>
+        </>
       )}
     </section>
   );

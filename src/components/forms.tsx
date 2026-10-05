@@ -1,6 +1,12 @@
 "use client";
-import { useForm } from "react-hook-form";
+import { useForm, useWatch } from "react-hook-form";
 import { useState } from "react";
+import {
+  cardInstitutionById,
+  cardInstitutions,
+  normalizeInstitutionName,
+} from "@/lib/bank-themes";
+import { PortraitBankCard } from "./credit-card-carousel";
 import { accountSchema, benefitSchema, transactionSchema } from "@/lib/schemas";
 import {
   accountKinds,
@@ -20,6 +26,7 @@ type AccountFields = {
   color: string;
   creditLimit?: string;
   creditAvailable?: string;
+  hasLinkedAccount: boolean;
 };
 type BenefitFields = {
   name: string;
@@ -48,20 +55,61 @@ export function AccountDialog({
   open,
   onOpenChange,
   mode = "account",
+  editingAccount = null,
 }: {
   open: boolean;
   onOpenChange: (open: boolean) => void;
   mode?: "account" | "card";
+  editingAccount?: Account | null;
 }) {
-  const { addAccount } = useApp();
-  const { register, handleSubmit, reset } = useForm<AccountFields>({
-    defaultValues: { kind: "checking", openingBalance: "0", color: "#7a3e2b" },
+  const { addAccount, updateCard, removeCard } = useApp();
+  const [confirmRemove, setConfirmRemove] = useState(false);
+  const { register, handleSubmit, reset, control } = useForm<AccountFields>({
+    defaultValues: editingAccount
+      ? {
+          name: editingAccount.name,
+          institution:
+            editingAccount.institutionId ??
+            normalizeInstitutionName(editingAccount.institution) ??
+            "",
+          kind: editingAccount.kind,
+          openingBalance: (editingAccount.openingBalanceCents / 100)
+            .toFixed(2)
+            .replace(".", ","),
+          color: editingAccount.color,
+          creditLimit: ((editingAccount.creditLimitCents ?? 0) / 100)
+            .toFixed(2)
+            .replace(".", ","),
+          creditAvailable: (
+            (editingAccount.creditAvailableCents ??
+              (editingAccount.creditLimitCents ?? 0) -
+                (editingAccount.creditUsedCents ?? 0)) / 100
+          )
+            .toFixed(2)
+            .replace(".", ","),
+          hasLinkedAccount: editingAccount.hasLinkedAccount ?? true,
+        }
+      : {
+          kind: "checking",
+          openingBalance: "0",
+          color: "#7a3e2b",
+          institution: mode === "card" ? cardInstitutions[0]?.id : "",
+          hasLinkedAccount: mode !== "card",
+        },
   });
+  const institutionValue = useWatch({ control, name: "institution" });
+  const cardName = useWatch({ control, name: "name" });
+  const hasLinkedAccount = useWatch({ control, name: "hasLinkedAccount" });
+  const selectedInstitution = cardInstitutionById(institutionValue);
   const [error, setError] = useState("");
   const [busy, setBusy] = useState(false);
   async function submit(raw: AccountFields) {
     setError("");
-    const result = accountSchema.safeParse(raw);
+    const result = accountSchema.safeParse(
+      mode === "card"
+        ? { ...raw, institution: selectedInstitution?.name ?? raw.institution }
+        : raw,
+    );
     if (!result.success) {
       setError(result.error.issues[0].message);
       return;
@@ -73,19 +121,29 @@ export function AccountDialog({
       setError("Informe o limite total e o crédito disponível do cartão.");
       return;
     }
+    if (mode === "card" && !selectedInstitution) {
+      setError("Selecione uma instituição disponível.");
+      return;
+    }
     setBusy(true);
     try {
-      await addAccount({
-        id: crypto.randomUUID(),
+      const account: Account = {
+        ...editingAccount,
+        id: editingAccount?.id ?? crypto.randomUUID(),
         name: result.data.name,
         institution: result.data.institution,
+        institutionId: mode === "card" ? selectedInstitution?.id : null,
+        hasLinkedAccount: mode === "card" ? raw.hasLinkedAccount : true,
         kind: result.data.kind,
         openingBalanceCents: result.data.openingBalance,
         color: result.data.color,
-        active: true,
+        active: editingAccount?.active ?? true,
+        source: editingAccount?.source ?? "manual",
         creditLimitCents: result.data.creditLimit,
         creditAvailableCents: result.data.creditAvailable,
-      });
+      };
+      if (editingAccount) await updateCard(account);
+      else await addAccount(account);
       reset();
       onOpenChange(false);
     } catch {
@@ -98,110 +156,215 @@ export function AccountDialog({
     <DialogFrame
       open={open}
       onOpenChange={onOpenChange}
-      title={mode === "card" ? "Novo cartão manual" : "Nova conta"}
+      title={
+        mode === "card"
+          ? editingAccount
+            ? "Editar cartão"
+            : "Novo cartão manual"
+          : "Nova conta"
+      }
       description={
         mode === "card"
-          ? "Vincule o cartão a uma conta manual e informe seu limite real."
+          ? "Informe o limite do cartão e, se houver, a conta vinculada."
           : "Cadastre uma conta para acompanhar seu saldo."
       }
     >
-      <form onSubmit={handleSubmit(submit)} className="space-y-4">
-        <div>
-          <label className="label" htmlFor="account-name">
-            {mode === "card" ? "Nome do cartão" : "Nome da conta"}
-          </label>
-          <input
-            id="account-name"
-            className="input"
-            required
-            {...register("name")}
-          />
-        </div>
-        <div>
-          <label className="label" htmlFor="account-bank">
-            Instituição
-          </label>
-          <input
-            id="account-bank"
-            className="input"
-            required
-            {...register("institution")}
-          />
-        </div>
-        <div className="grid grid-cols-2 gap-3">
-          <div>
-            <label className="label" htmlFor="account-kind">
-              Tipo
-            </label>
-            <select id="account-kind" className="input" {...register("kind")}>
-              {Object.entries(accountKinds).map(([value, label]) => (
-                <option key={value} value={value}>
-                  {label}
-                </option>
-              ))}
-            </select>
+      {confirmRemove ? (
+        <div className="space-y-4">
+          <p>
+            Remover o cartão <strong>{editingAccount?.name}</strong>? As
+            transações serão preservadas.
+            {editingAccount?.hasLinkedAccount !== false &&
+              " A conta vinculada também será mantida."}
+          </p>
+          {error && <ErrorText message={error} />}
+          <div className="flex gap-2">
+            <button
+              type="button"
+              className="btn btn-outline"
+              onClick={() => setConfirmRemove(false)}
+              disabled={busy}
+            >
+              Cancelar
+            </button>
+            <button
+              type="button"
+              className="btn btn-primary"
+              disabled={busy}
+              onClick={async () => {
+                if (!editingAccount) return;
+                setBusy(true);
+                setError("");
+                try {
+                  await removeCard(editingAccount);
+                  onOpenChange(false);
+                } catch {
+                  setError("Não foi possível remover o cartão.");
+                } finally {
+                  setBusy(false);
+                }
+              }}
+            >
+              Confirmar remoção
+            </button>
           </div>
+        </div>
+      ) : (
+        <form onSubmit={handleSubmit(submit)} className="space-y-4">
           <div>
-            <label className="label" htmlFor="account-balance">
-              {mode === "card"
-                ? "Saldo da conta vinculada (R$)"
-                : "Saldo inicial (R$)"}
+            <label className="label" htmlFor="account-name">
+              {mode === "card" ? "Nome do cartão" : "Nome da conta"}
             </label>
             <input
-              id="account-balance"
+              id="account-name"
               className="input"
-              inputMode="decimal"
               required
-              {...register("openingBalance")}
-            />
-          </div>
-        </div>
-        <div>
-          <label className="label" htmlFor="account-color">
-            Cor
-          </label>
-          <input
-            id="account-color"
-            type="color"
-            className="h-10 w-16 cursor-pointer"
-            {...register("color")}
-          />
-        </div>
-        <div className="grid grid-cols-2 gap-3">
-          <div>
-            <label className="label" htmlFor="account-credit-limit">
-              Limite de crédito (R$)
-            </label>
-            <input
-              id="account-credit-limit"
-              className="input"
-              inputMode="decimal"
-              placeholder={mode === "card" ? "Obrigatório" : "Opcional"}
-              {...register("creditLimit")}
+              {...register("name")}
             />
           </div>
           <div>
-            <label className="label" htmlFor="account-credit-available">
-              Crédito disponível (R$)
+            <label className="label" htmlFor="account-bank">
+              Instituição
             </label>
-            <input
-              id="account-credit-available"
-              className="input"
-              inputMode="decimal"
-              placeholder={mode === "card" ? "Obrigatório" : "Opcional"}
-              {...register("creditAvailable")}
-            />
+            {mode === "card" ? (
+              <select
+                id="account-bank"
+                className="input"
+                required
+                {...register("institution")}
+              >
+                <option value="">Selecione</option>
+                {cardInstitutions.map((item) => (
+                  <option key={item.id} value={item.id}>
+                    {item.name}
+                  </option>
+                ))}
+              </select>
+            ) : (
+              <input
+                id="account-bank"
+                className="input"
+                required
+                {...register("institution")}
+              />
+            )}
           </div>
-        </div>
-        {error && <ErrorText message={error} />}
-        <button className="btn btn-primary w-full" disabled={busy}>
-          {busy
-            ? "Salvando…"
-            : mode === "card"
-              ? "Salvar cartão"
-              : "Salvar conta"}
-        </button>
-      </form>
+          {mode === "card" && (
+            <label className="flex items-center gap-2 text-sm">
+              <input type="checkbox" {...register("hasLinkedAccount")} />
+              Este cartão também tem uma conta vinculada
+            </label>
+          )}
+          {(hasLinkedAccount || mode === "account") && (
+            <div className="grid grid-cols-2 gap-3">
+              <div>
+                <label className="label" htmlFor="account-kind">
+                  Tipo
+                </label>
+                <select
+                  id="account-kind"
+                  className="input"
+                  {...register("kind")}
+                >
+                  {Object.entries(accountKinds).map(([value, label]) => (
+                    <option key={value} value={value}>
+                      {label}
+                    </option>
+                  ))}
+                </select>
+              </div>
+              <div>
+                <label className="label" htmlFor="account-balance">
+                  {mode === "card"
+                    ? "Saldo da conta vinculada (R$)"
+                    : "Saldo inicial (R$)"}
+                </label>
+                <input
+                  id="account-balance"
+                  className="input"
+                  inputMode="decimal"
+                  required
+                  {...register("openingBalance")}
+                />
+              </div>
+            </div>
+          )}
+          {mode === "card" && selectedInstitution && (
+            <div className="card-form-preview">
+              <PortraitBankCard
+                account={{
+                  id: editingAccount?.id ?? "preview",
+                  name: cardName || "Seu cartão",
+                  institution: selectedInstitution.name,
+                  institutionId: selectedInstitution.id,
+                  kind: "checking",
+                  openingBalanceCents: 0,
+                  color: "#7a3e2b",
+                  active: true,
+                }}
+              />
+            </div>
+          )}
+          {mode === "account" && (
+            <div>
+              <label className="label" htmlFor="account-color">
+                Cor
+              </label>
+              <input
+                id="account-color"
+                type="color"
+                className="h-10 w-16 cursor-pointer"
+                {...register("color")}
+              />
+            </div>
+          )}
+          <div className="grid grid-cols-2 gap-3">
+            <div>
+              <label className="label" htmlFor="account-credit-limit">
+                Limite de crédito (R$)
+              </label>
+              <input
+                id="account-credit-limit"
+                className="input"
+                inputMode="decimal"
+                placeholder={mode === "card" ? "Obrigatório" : "Opcional"}
+                {...register("creditLimit")}
+              />
+            </div>
+            <div>
+              <label className="label" htmlFor="account-credit-available">
+                Crédito disponível (R$)
+              </label>
+              <input
+                id="account-credit-available"
+                className="input"
+                inputMode="decimal"
+                placeholder={mode === "card" ? "Obrigatório" : "Opcional"}
+                {...register("creditAvailable")}
+              />
+            </div>
+          </div>
+          {error && <ErrorText message={error} />}
+          <button className="btn btn-primary w-full" disabled={busy}>
+            {busy
+              ? "Salvando…"
+              : mode === "card"
+                ? "Salvar cartão"
+                : "Salvar conta"}
+          </button>
+          {editingAccount && (
+            <div className="border-t pt-4">
+              <button
+                type="button"
+                className="btn btn-outline w-full"
+                onClick={() => setConfirmRemove(true)}
+              >
+                Remover cartão
+              </button>
+            </div>
+          )}
+        </form>
+      )}
     </DialogFrame>
   );
 }

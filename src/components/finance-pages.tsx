@@ -1,5 +1,11 @@
 "use client";
-import { useEffect, useMemo, useState, type CSSProperties } from "react";
+import {
+  useEffect,
+  useMemo,
+  useRef,
+  useState,
+  type CSSProperties,
+} from "react";
 import { ArrowDownLeft, ArrowUpRight, Plus, Search } from "lucide-react";
 import { useApp } from "./app-provider";
 import { AccountDialog, BenefitDialog, TransactionDialog } from "./forms";
@@ -264,13 +270,19 @@ export function BenefitsPage() {
 }
 export function TransactionsPage({
   initialType = "all",
+  focusSearch = false,
 }: {
   initialType?: string;
+  focusSearch?: boolean;
 }) {
   const { data, loading, error, reload } = useApp();
   const [open, setOpen] = useState(false);
   const [search, setSearch] = useState("");
   const [type, setType] = useState(initialType);
+  const searchRef = useRef<HTMLInputElement>(null);
+  useEffect(() => {
+    if (focusSearch) searchRef.current?.focus();
+  }, [focusSearch]);
   const correctCategory = async (id: string, category: string) => {
     if (!supabase) return;
     const { error } = await supabase
@@ -315,6 +327,7 @@ export function TransactionsPage({
           <Search size={18} className="absolute left-3 top-3.5 text-muted" />
           <span className="sr-only">Pesquisar transações</span>
           <input
+            ref={searchRef}
             className="input !pl-10"
             placeholder="Pesquisar transações"
             value={search}

@@ -1,6 +1,7 @@
 import type { Account } from "./model";
 
 export type BankTheme = {
+  cardName?: string;
   background: string;
   foreground: string;
   muted: string;
@@ -10,6 +11,7 @@ export type BankTheme = {
 
 const themes: Record<string, BankTheme> = {
   mercado_pago: {
+    cardName: "Mercado Pago",
     background: "linear-gradient(135deg,#171d2c,#30425f)",
     foreground: "#fff",
     muted: "#d7e5ff",
@@ -38,6 +40,7 @@ const themes: Record<string, BankTheme> = {
     pattern: "circle",
   },
   sicoob: {
+    cardName: "Sicoob",
     background: "linear-gradient(135deg,#00a99b,#087a78)",
     foreground: "#fff",
     muted: "#dcfffa",
@@ -66,6 +69,7 @@ const themes: Record<string, BankTheme> = {
     pattern: "organic",
   },
   sicredi: {
+    cardName: "Sicredi",
     background: "linear-gradient(135deg,#073f2d,#0b5c3a)",
     foreground: "#fff",
     muted: "#d7f7e8",
@@ -94,6 +98,7 @@ const themes: Record<string, BankTheme> = {
     pattern: "circle",
   },
   nubank: {
+    cardName: "Nubank",
     background: "linear-gradient(135deg,#731cc2,#4d0f8e)",
     foreground: "#fff",
     muted: "#efe0ff",
@@ -101,6 +106,7 @@ const themes: Record<string, BankTheme> = {
     pattern: "circle",
   },
   caixa: {
+    cardName: "Caixa",
     background: "linear-gradient(135deg,#0073bb,#159bd0)",
     foreground: "#fff",
     muted: "#e5f7ff",
@@ -108,6 +114,7 @@ const themes: Record<string, BankTheme> = {
     pattern: "blocks",
   },
   bradesco: {
+    cardName: "Bradesco",
     background: "linear-gradient(135deg,#bb092a,#910b23)",
     foreground: "#fff",
     muted: "#ffe5e9",
@@ -122,6 +129,7 @@ const themes: Record<string, BankTheme> = {
     pattern: "blocks",
   },
   banco_do_brasil: {
+    cardName: "Banco do Brasil",
     background: "linear-gradient(135deg,#ffe91b,#ffcf27)",
     foreground: "#143d9a",
     muted: "#174b9a",
@@ -129,6 +137,7 @@ const themes: Record<string, BankTheme> = {
     pattern: "diagonal",
   },
   itau: {
+    cardName: "Itaú",
     background: "linear-gradient(135deg,#ff8b16,#ed6712)",
     foreground: "#fff",
     muted: "#fff0dc",
@@ -136,6 +145,7 @@ const themes: Record<string, BankTheme> = {
     pattern: "circle",
   },
   santander: {
+    cardName: "Santander",
     background: "linear-gradient(135deg,#f12727,#c70f20)",
     foreground: "#fff",
     muted: "#ffe6e6",
@@ -150,6 +160,7 @@ const themes: Record<string, BankTheme> = {
     pattern: "circle",
   },
   inter: {
+    cardName: "Inter",
     background: "linear-gradient(135deg,#ff8d20,#e85c12)",
     foreground: "#fff",
     muted: "#fff0df",
@@ -157,6 +168,7 @@ const themes: Record<string, BankTheme> = {
     pattern: "organic",
   },
   c6: {
+    cardName: "C6 Bank",
     background: "linear-gradient(135deg,#e7e7e6,#bfc3c4)",
     foreground: "#172021",
     muted: "#344345",
@@ -164,6 +176,7 @@ const themes: Record<string, BankTheme> = {
     pattern: "diagonal",
   },
   picpay: {
+    cardName: "PicPay",
     background: "linear-gradient(135deg,#16c477,#09a66b)",
     foreground: "#083b2c",
     muted: "#13543c",
@@ -171,6 +184,15 @@ const themes: Record<string, BankTheme> = {
     pattern: "circle",
   },
 };
+
+export const cardInstitutions = Object.entries(themes)
+  .filter((entry) => Boolean(entry[1].cardName))
+  .map(([id, theme]) => ({ id, name: theme.cardName!, theme }))
+  .sort((a, b) => a.name.localeCompare(b.name, "pt-BR"));
+
+export function cardInstitutionById(id: string | null | undefined) {
+  return cardInstitutions.find((entry) => entry.id === id);
+}
 
 const aliases: [RegExp, keyof typeof themes][] = [
   [/mercado\s*pago|mercadopago/i, "mercado_pago"],
@@ -220,5 +242,8 @@ export function institutionTheme(institution: string, name = ""): BankTheme {
 }
 
 export function bankTheme(account: Account): BankTheme {
-  return institutionTheme(account.institution, account.name);
+  return (
+    cardInstitutionById(account.institutionId)?.theme ??
+    institutionTheme(account.institution, account.name)
+  );
 }

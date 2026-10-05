@@ -2,6 +2,8 @@ export type Account = {
   id: string;
   name: string;
   institution: string;
+  institutionId?: string | null;
+  hasLinkedAccount?: boolean;
   kind: "checking" | "savings" | "digital" | "cash" | "investment" | "other";
   openingBalanceCents: number;
   color: string;

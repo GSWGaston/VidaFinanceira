@@ -11,6 +11,8 @@ import { emptyFinanceData, removeSampleRecords } from "./local-data";
 export interface FinanceRepository {
   load(): Promise<FinanceData>;
   addAccount(item: Account): Promise<void>;
+  updateCard(item: Account): Promise<void>;
+  removeCard(item: Account): Promise<void>;
   addBenefit(item: Benefit): Promise<void>;
   addTransaction(item: Transaction): Promise<void>;
 }
@@ -50,6 +52,33 @@ export class LocalRepository implements FinanceRepository {
   addAccount(item: Account) {
     return this.save("accounts", item);
   }
+  async updateCard(item: Account) {
+    const data = await this.load();
+    const index = data.accounts.findIndex(
+      (account) =>
+        account.id === item.id &&
+        (!account.source || account.source === "manual"),
+    );
+    if (index < 0) throw new Error("Cartão manual não encontrado.");
+    data.accounts[index] = item;
+    localStorage.setItem(localKey, JSON.stringify(data));
+  }
+  async removeCard(item: Account) {
+    const data = await this.load();
+    const account = data.accounts.find(
+      (entry) =>
+        entry.id === item.id && (!entry.source || entry.source === "manual"),
+    );
+    if (!account) throw new Error("Cartão manual não encontrado.");
+    Object.assign(account, {
+      creditLimitCents: null,
+      creditAvailableCents: null,
+      creditUsedCents: null,
+      creditLineId: null,
+    });
+    if (account.hasLinkedAccount === false) account.active = false;
+    localStorage.setItem(localKey, JSON.stringify(data));
+  }
   addBenefit(item: Benefit) {
     return this.save("benefits", item);
   }
@@ -71,6 +100,8 @@ type AccountRow = {
   id: string;
   name: string;
   institution: string;
+  institution_id?: string | null;
+  has_linked_account?: boolean;
   kind: Account["kind"];
   opening_balance_cents: number;
   color: string;
@@ -128,15 +159,25 @@ export class SupabaseRepository implements FinanceRepository {
       const result = await this.client
         .from("accounts")
         .select(
-          `${accountColumns},credit_limit_cents,credit_available_cents,credit_used_cents,credit_line_id`,
+          `${accountColumns},institution_id,has_linked_account,credit_limit_cents,credit_available_cents,credit_used_cents,credit_line_id`,
         )
         .order("created_at");
       // Existing deployments remain readable until the migration is applied.
-      if (result.error?.code === "42703" || result.error?.code === "PGRST204")
-        return this.client
+      if (result.error?.code === "42703" || result.error?.code === "PGRST204") {
+        const legacy = await this.client
           .from("accounts")
-          .select(accountColumns)
+          .select(
+            `${accountColumns},credit_limit_cents,credit_available_cents,credit_used_cents,credit_line_id`,
+          )
           .order("created_at");
+        if (!legacy.error) return legacy;
+        if (legacy.error.code === "42703" || legacy.error.code === "PGRST204")
+          return this.client
+            .from("accounts")
+            .select(accountColumns)
+            .order("created_at");
+        return legacy;
+      }
       return result;
     };
     const [accounts, benefits, transactions, connections] = await Promise.all([
@@ -172,6 +213,8 @@ export class SupabaseRepository implements FinanceRepository {
         id: row.id,
         name: row.name,
         institution: row.institution,
+        institutionId: row.institution_id ?? null,
+        hasLinkedAccount: row.has_linked_account ?? true,
         kind: row.kind,
         openingBalanceCents: row.opening_balance_cents,
         color: row.color,
@@ -227,6 +270,8 @@ export class SupabaseRepository implements FinanceRepository {
       user_id: this.userId,
       name: item.name,
       institution: item.institution,
+      ...(item.institutionId && { institution_id: item.institutionId }),
+      has_linked_account: item.hasLinkedAccount ?? true,
       kind: item.kind,
       opening_balance_cents: item.openingBalanceCents,
       color: item.color,
@@ -243,6 +288,47 @@ export class SupabaseRepository implements FinanceRepository {
       ...(item.creditLineId && { credit_line_id: item.creditLineId }),
     });
     if (error) throw error;
+  }
+  async updateCard(item: Account) {
+    const { data, error } = await this.client
+      .from("accounts")
+      .update({
+        name: item.name,
+        institution: item.institution,
+        institution_id: item.institutionId ?? null,
+        has_linked_account: item.hasLinkedAccount ?? true,
+        kind: item.kind,
+        opening_balance_cents: item.openingBalanceCents,
+        color: item.color,
+        credit_limit_cents: item.creditLimitCents,
+        credit_available_cents: item.creditAvailableCents,
+        credit_used_cents: null,
+      })
+      .eq("id", item.id)
+      .eq("user_id", this.userId)
+      .eq("source", "manual")
+      .select("id")
+      .single();
+    if (error) throw error;
+    if (!data) throw new Error("Cartão manual não encontrado.");
+  }
+  async removeCard(item: Account) {
+    const { data, error } = await this.client
+      .from("accounts")
+      .update({
+        credit_limit_cents: null,
+        credit_available_cents: null,
+        credit_used_cents: null,
+        credit_line_id: null,
+        ...(item.hasLinkedAccount === false && { active: false }),
+      })
+      .eq("id", item.id)
+      .eq("user_id", this.userId)
+      .eq("source", "manual")
+      .select("id")
+      .single();
+    if (error) throw error;
+    if (!data) throw new Error("Cartão manual não encontrado.");
   }
   async addBenefit(item: Benefit) {
     const { error } = await this.client.from("benefit_accounts").insert({

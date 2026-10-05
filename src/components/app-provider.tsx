@@ -28,6 +28,8 @@ type AppContextValue = {
   user: User | null;
   reload: () => Promise<void>;
   addAccount: (item: Account) => Promise<void>;
+  updateCard: (item: Account) => Promise<void>;
+  removeCard: (item: Account) => Promise<void>;
   addBenefit: (item: Benefit) => Promise<void>;
   addTransaction: (item: Transaction) => Promise<void>;
 };
@@ -125,6 +127,8 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
     user,
     reload,
     addAccount: (item) => mutate((repository) => repository.addAccount(item)),
+    updateCard: (item) => mutate((repository) => repository.updateCard(item)),
+    removeCard: (item) => mutate((repository) => repository.removeCard(item)),
     addBenefit: (item) => mutate((repository) => repository.addBenefit(item)),
     addTransaction: (item) =>
       mutate((repository) => repository.addTransaction(item)),

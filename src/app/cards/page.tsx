@@ -1,4 +1,4 @@
-import { AccountsCardsPage } from "@/components/accounts-cards-page";
+import { redirect } from "next/navigation";
 export default function Page() {
-  return <AccountsCardsPage defaultTab="cards" />;
+  redirect("/accounts");
 }

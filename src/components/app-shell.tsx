@@ -19,11 +19,14 @@ import {
   Layers3,
   Sun,
   Moon,
+  Search,
+  UserRound,
 } from "lucide-react";
 import { useEffect, useState } from "react";
 import { useApp } from "./app-provider";
 import { TransactionDialog } from "./forms";
 import { Brand } from "./brand";
+import { Sheet } from "./primitives";
 import { dashboardTotals } from "@/lib/finance";
 import { formatMoney } from "@/lib/money";
 const navigation = [
@@ -44,23 +47,47 @@ const navigation = [
 const mainMobile = navigation.slice(0, 4);
 export function AppShell({ children }: { children: React.ReactNode }) {
   const path = usePathname();
-  const { local, data, loading } = useApp();
+  const { local, data } = useApp();
   const [more, setMore] = useState(false);
   const [transactionOpen, setTransactionOpen] = useState(false);
   const [dark, setDark] = useState(false);
   const [localNotice, setLocalNotice] = useState(true);
-  const [homeCompact, setHomeCompact] = useState(false);
   useEffect(() => {
-    if (path !== "/" || loading) return;
-    const sentinel = document.getElementById("home-hero-sentinel");
-    if (!sentinel) return;
-    const observer = new IntersectionObserver(
-      ([entry]) => setHomeCompact(entry.boundingClientRect.top <= 60),
-      { rootMargin: "-60px 0px 0px 0px" },
-    );
-    observer.observe(sentinel);
-    return () => observer.disconnect();
-  }, [path, loading]);
+    if (path !== "/") return;
+    let frame = 0;
+    const reducedMotion = window.matchMedia("(prefers-reduced-motion: reduce)");
+    const update = () => {
+      frame = 0;
+      const scroll = window.scrollY;
+      const progress = reducedMotion.matches
+        ? 0
+        : Math.min(1, Math.max(0, scroll / 170));
+      const headerProgress = reducedMotion.matches
+        ? Number(scroll >= 290)
+        : Math.min(1, Math.max(0, (scroll - 170) / 110));
+      document.documentElement.style.setProperty(
+        "--home-progress",
+        String(progress),
+      );
+      document.documentElement.style.setProperty(
+        "--home-header-progress",
+        String(headerProgress),
+      );
+    };
+    const onScroll = () => {
+      if (!frame) frame = window.requestAnimationFrame(update);
+    };
+    update();
+    window.addEventListener("scroll", onScroll, { passive: true });
+    reducedMotion.addEventListener("change", onScroll);
+    return () => {
+      window.removeEventListener("scroll", onScroll);
+      reducedMotion.removeEventListener("change", onScroll);
+      if (frame) window.cancelAnimationFrame(frame);
+      document.documentElement.style.removeProperty("--home-progress");
+      document.documentElement.style.removeProperty("--home-header-progress");
+    };
+  }, [path]);
   function toggleTheme() {
     const next = !dark;
     setDark(next);
@@ -98,29 +125,42 @@ export function AppShell({ children }: { children: React.ReactNode }) {
       </aside>
       <div className="min-w-0 flex-1">
         <header
-          className={`app-header sticky top-0 z-20 flex h-[72px] items-center justify-between border-b border-border bg-surface/95 px-5 backdrop-blur sm:px-9 ${path === "/" ? "home-app-header" : ""} ${homeCompact ? "home-app-header-compact" : ""}`}
+          className={`app-header sticky top-0 z-20 flex h-[72px] items-center justify-between border-b border-border bg-surface/95 px-5 backdrop-blur sm:px-9 ${path === "/" ? "home-topbar" : ""}`}
         >
-          <Link href="/" className="flex items-center lg:hidden">
+          <Link
+            href="/"
+            className={`flex items-center ${path === "/" ? "home-topbar-logo" : "lg:hidden"}`}
+          >
             <Brand compact />
           </Link>
-          {path === "/" && homeCompact && (
-            <span
-              className="home-header-balance lg:hidden"
-              aria-label="Saldo disponível"
-            >
-              {formatMoney(dashboardTotals(data).balance)}
-            </span>
+          {path === "/" && (
+            <>
+              <Link
+                href="/transactions?focus=search"
+                className="home-topbar-search"
+                aria-label="Pesquisar transações"
+              >
+                <Search size={18} /> <span>Pesquisar</span>
+              </Link>
+              <span className="home-topbar-balance" aria-hidden="true">
+                {formatMoney(dashboardTotals(data).balance)}
+              </span>
+            </>
           )}
-          <div className="hidden lg:block">
-            <p className="text-xs font-semibold text-muted">
-              Seu espaço financeiro
-            </p>
-            <p className="text-sm font-bold">Visão geral e controle</p>
-          </div>
-          <div className="flex items-center gap-2">
-            <span className="hidden sm:inline-flex rounded-full bg-soft px-3 py-1.5 text-xs font-bold text-primary">
-              {local ? "Dados locais" : "Conta pessoal"}
-            </span>
+          {path !== "/" && (
+            <div className="hidden lg:block">
+              <p className="text-xs font-semibold text-muted">
+                Seu espaço financeiro
+              </p>
+              <p className="text-sm font-bold">Visão geral e controle</p>
+            </div>
+          )}
+          <div className="app-header-actions flex items-center gap-2">
+            {path !== "/" && (
+              <span className="hidden rounded-full bg-soft px-3 py-1.5 text-xs font-bold text-primary sm:inline-flex">
+                {local ? "Dados locais" : "Conta pessoal"}
+              </span>
+            )}
             <button
               aria-label={dark ? "Ativar tema claro" : "Ativar tema escuro"}
               onClick={toggleTheme}
@@ -128,16 +168,29 @@ export function AppShell({ children }: { children: React.ReactNode }) {
             >
               {dark ? <Sun size={19} /> : <Moon size={19} />}
             </button>
-            <button
-              onClick={() => setTransactionOpen(true)}
-              className="btn btn-primary !hidden sm:!inline-flex"
-            >
-              <Plus size={17} />
-              Nova transação
-            </button>
+            {path === "/" && (
+              <Link
+                href="/settings"
+                className="home-profile-action"
+                aria-label="Abrir perfil e configurações"
+              >
+                <UserRound size={20} />
+              </Link>
+            )}
+            {path !== "/" && path !== "/transactions" && (
+              <button
+                onClick={() => setTransactionOpen(true)}
+                className="btn btn-primary !hidden sm:!inline-flex"
+              >
+                <Plus size={17} />
+                Nova transação
+              </button>
+            )}
           </div>
         </header>
-        <main className="mx-auto max-w-[1450px] px-5 pb-32 pt-7 sm:px-9 lg:pb-14 lg:pt-10">
+        <main
+          className={`mx-auto max-w-[1450px] px-5 pb-32 pt-7 sm:px-9 lg:pb-14 lg:pt-10 ${path === "/" ? "home-main" : ""}`}
+        >
           {local && localNotice && path !== "/" && (
             <div className="local-notice mb-4 flex items-start justify-between gap-3 rounded-xl border border-border bg-surface-secondary px-3 py-2 text-xs font-medium text-primary sm:mb-6 sm:px-4 sm:py-2.5">
               <span>
@@ -165,7 +218,7 @@ export function AppShell({ children }: { children: React.ReactNode }) {
             key={href}
             href={href}
             aria-current={path === href ? "page" : undefined}
-            className={`flex min-h-[61px] flex-1 flex-col items-center justify-center gap-1 text-[10px] font-bold ${path === href ? "mobile-nav-active text-primary" : "text-muted"}`}
+            className={`flex min-h-[61px] flex-1 flex-col items-center justify-center gap-1 text-[10px] font-bold ${path === href ? "mobile-nav-active text-accent-text" : "text-muted"}`}
           >
             <Icon size={21} />
             {label === "Planejamento" ? "Planejar" : label}
@@ -179,42 +232,22 @@ export function AppShell({ children }: { children: React.ReactNode }) {
           Mais
         </button>
       </nav>
-      {more && (
-        <div
-          className="fixed inset-0 z-40 bg-[var(--overlay)] lg:hidden"
-          onClick={() => setMore(false)}
-        >
-          <div
-            className="safe-bottom absolute inset-x-0 bottom-0 max-h-[80vh] overflow-auto rounded-t-[28px] bg-surface p-5"
-            onClick={(e) => e.stopPropagation()}
-          >
-            <div className="mb-4 flex items-center justify-between">
-              <h2 className="text-xl font-extrabold">Mais opções</h2>
-              <button
-                aria-label="Fechar menu"
-                className="btn btn-ghost !p-2"
-                onClick={() => setMore(false)}
-              >
-                <X size={20} />
-              </button>
-            </div>
-            <div className="grid grid-cols-2 gap-2">
-              {navigation.slice(4).map(({ href, label, icon: Icon }) => (
-                <Link
-                  key={href}
-                  href={href}
-                  onClick={() => setMore(false)}
-                  className="flex min-h-14 items-center gap-3 rounded-xl bg-background px-3 text-sm font-semibold"
-                >
-                  <Icon size={19} className="text-primary" />
-                  {label}
-                </Link>
-              ))}
-            </div>
-          </div>
+      <Sheet open={more} onOpenChange={setMore} title="Mais opções">
+        <div className="grid grid-cols-2 gap-2">
+          {navigation.slice(4).map(({ href, label, icon: Icon }) => (
+            <Link
+              key={href}
+              href={href}
+              onClick={() => setMore(false)}
+              className="flex min-h-14 items-center gap-3 rounded-xl border border-border bg-background px-3 text-sm font-semibold"
+            >
+              <Icon size={19} className="text-primary" />
+              {label}
+            </Link>
+          ))}
         </div>
-      )}
-      {path !== "/" && (
+      </Sheet>
+      {!["/", "/transactions", "/accounts", "/cards"].includes(path) && (
         <button
           aria-label="Nova transação"
           onClick={() => setTransactionOpen(true)}
