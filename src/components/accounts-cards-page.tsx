@@ -23,6 +23,8 @@ export function AccountsCardsPage() {
   const [accountOpen, setAccountOpen] = useState(false);
   const [cardOpen, setCardOpen] = useState(false);
   const [editingCard, setEditingCard] = useState<Account | null>(null);
+  const [cardDialogVersion, setCardDialogVersion] = useState(0);
+  const [initialRemove, setInitialRemove] = useState(false);
   const [benefitOpen, setBenefitOpen] = useState(false);
   const syncing =
     data.connections?.some((connection) => connection.status === "syncing") ??
@@ -46,6 +48,14 @@ export function AccountsCardsPage() {
   const openCard = () => {
     setAddOpen(false);
     setEditingCard(null);
+    setInitialRemove(false);
+    setCardDialogVersion((version) => version + 1);
+    setCardOpen(true);
+  };
+  const openCardEditor = (account: Account, remove = false) => {
+    setEditingCard(account);
+    setInitialRemove(remove);
+    setCardDialogVersion((version) => version + 1);
     setCardOpen(true);
   };
   const openBenefit = () => {
@@ -94,10 +104,8 @@ export function AccountsCardsPage() {
             data={data}
             onAddManual={openCard}
             onAddAccount={openAccount}
-            onEdit={(account) => {
-              setEditingCard(account);
-              setCardOpen(true);
-            }}
+            onEdit={(account) => openCardEditor(account)}
+            onRemove={(account) => openCardEditor(account, true)}
           />
           {orphanedConnections.length > 0 && (
             <section className="accounts-connections">
@@ -157,11 +165,12 @@ export function AccountsCardsPage() {
       </Sheet>
       <AccountDialog open={accountOpen} onOpenChange={setAccountOpen} />
       <AccountDialog
-        key={editingCard?.id ?? "new-card"}
+        key={cardDialogVersion}
         open={cardOpen}
         onOpenChange={setCardOpen}
         mode="card"
         editingAccount={editingCard}
+        initialRemove={initialRemove}
       />
       <BenefitDialog open={benefitOpen} onOpenChange={setBenefitOpen} />
     </div>

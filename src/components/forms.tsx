@@ -56,14 +56,16 @@ export function AccountDialog({
   onOpenChange,
   mode = "account",
   editingAccount = null,
+  initialRemove = false,
 }: {
   open: boolean;
   onOpenChange: (open: boolean) => void;
   mode?: "account" | "card";
   editingAccount?: Account | null;
+  initialRemove?: boolean;
 }) {
   const { addAccount, updateCard, removeCard } = useApp();
-  const [confirmRemove, setConfirmRemove] = useState(false);
+  const [confirmRemove, setConfirmRemove] = useState(initialRemove);
   const { register, handleSubmit, reset, control } = useForm<AccountFields>({
     defaultValues: editingAccount
       ? {
@@ -157,11 +159,13 @@ export function AccountDialog({
       open={open}
       onOpenChange={onOpenChange}
       title={
-        mode === "card"
-          ? editingAccount
-            ? "Editar cartão"
-            : "Novo cartão manual"
-          : "Nova conta"
+        confirmRemove
+          ? "Excluir cartão"
+          : mode === "card"
+            ? editingAccount
+              ? "Editar cartão"
+              : "Novo cartão manual"
+            : "Nova conta"
       }
       description={
         mode === "card"
@@ -205,7 +209,7 @@ export function AccountDialog({
                 }
               }}
             >
-              Confirmar remoção
+              Excluir cartão
             </button>
           </div>
         </div>

@@ -2,7 +2,7 @@
 
 import { useEffect, useRef, useState, type CSSProperties } from "react";
 import Link from "next/link";
-import { ArrowRight, CreditCard, Plus } from "lucide-react";
+import { ArrowRight, ChevronDown, CreditCard, Plus } from "lucide-react";
 import { bankTheme } from "@/lib/bank-themes";
 import { relationshipOverview } from "@/lib/relationship";
 import { accountKinds, type Account, type FinanceData } from "@/lib/model";
@@ -58,14 +58,17 @@ export function CreditCardCarousel({
   onAddManual,
   onAddAccount,
   onEdit,
+  onRemove,
 }: {
   data: FinanceData;
   onAddManual: () => void;
   onAddAccount: () => void;
   onEdit: (account: Account) => void;
+  onRemove: (account: Account) => void;
 }) {
   const accounts = data.accounts.filter((account) => account.active);
   const [selectedId, setSelectedId] = useState<string | null>(null);
+  const [expandedId, setExpandedId] = useState<string | null>(null);
   const viewport = useRef<HTMLDivElement>(null);
   const pointer = useRef<{ x: number; scroll: number } | null>(null);
   const moved = useRef(false);
@@ -144,11 +147,20 @@ export function CreditCardCarousel({
     hasCredit,
     hasAccount,
     balanceCents,
-    linkedTransactionsCount,
+    creditMovementsCount,
+    debitMovementsCount,
   } = relationshipOverview(data, selected);
   const connection = data.connections?.find(
     (item) => item.id === selected.connectionId,
   );
+  const selectedTransactions = data.transactions.filter(
+    (item) => item.accountId === selected.id,
+  );
+  const expanded = expandedId === selected.id;
+  const canManageCard =
+    hasCredit &&
+    (!selected.source || selected.source === "manual") &&
+    !selected.connectionId;
   return (
     <section className="credit-carousel-area" aria-label="Contas e cartões">
       <div
@@ -256,11 +268,38 @@ export function CreditCardCarousel({
                     <span>Limite disponível</span>
                     <Money cents={credit.available} />
                   </div>
+                  <div>
+                    <span>Movimentações do crédito</span>
+                    <strong>
+                      {creditMovementsCount === null
+                        ? "Indisponível"
+                        : `${creditMovementsCount} ${creditMovementsCount === 1 ? "registro" : "registros"}`}
+                    </strong>
+                  </div>
                 </div>
               ) : (
-                <p className="muted text-sm">
-                  Dados de limite ainda incompletos.
-                </p>
+                <div className="relationship-stats">
+                  <div>
+                    <span>Limite total</span>
+                    <strong>Indisponível</strong>
+                  </div>
+                  <div>
+                    <span>Limite utilizado</span>
+                    <strong>Indisponível</strong>
+                  </div>
+                  <div>
+                    <span>Limite disponível</span>
+                    <strong>Indisponível</strong>
+                  </div>
+                  <div>
+                    <span>Movimentações do crédito</span>
+                    <strong>
+                      {creditMovementsCount === null
+                        ? "Indisponível"
+                        : `${creditMovementsCount} ${creditMovementsCount === 1 ? "registro" : "registros"}`}
+                    </strong>
+                  </div>
+                </div>
               )}
             </section>
           )}
@@ -277,50 +316,101 @@ export function CreditCardCarousel({
                   )}
                 </div>
                 <div>
-                  <span>Movimentações vinculadas</span>
+                  <span>Movimentações do débito</span>
                   <strong>
-                    {linkedTransactionsCount}{" "}
-                    {linkedTransactionsCount === 1 ? "registro" : "registros"}
+                    {debitMovementsCount === null
+                      ? "Indisponível"
+                      : `${debitMovementsCount} ${debitMovementsCount === 1 ? "registro" : "registros"}`}
                   </strong>
                 </div>
-                <div>
-                  <span>Tipo de conta</span>
-                  <strong>{accountKinds[selected.kind]}</strong>
-                </div>
-                {selected.lastSyncedAt && (
-                  <div>
-                    <span>Última sincronização</span>
-                    <strong>
-                      {new Date(selected.lastSyncedAt).toLocaleString("pt-BR")}
-                    </strong>
-                  </div>
-                )}
               </div>
             </section>
           )}
         </div>
+        {((hasCredit && creditMovementsCount === null) ||
+          (hasAccount && debitMovementsCount === null)) && (
+          <p className="muted mt-4 text-xs">
+            Algumas movimentações não informam se foram no crédito ou no débito.
+          </p>
+        )}
         <div className="relationship-actions">
-          <Link href="/transactions" className="panel-link">
-            Ver transações <ArrowRight size={15} />
-          </Link>
-          {hasCredit &&
-            (!selected.source || selected.source === "manual") &&
-            !selected.connectionId && (
-              <button
-                type="button"
-                className="btn btn-outline"
-                onClick={() => onEdit(selected)}
-              >
-                Editar cartão
-              </button>
-            )}
-          {connection && connection.status !== "disconnected" && (
-            <OpenFinanceControls
-              connectionId={connection.id}
-              itemId={connection.providerItemId}
-            />
-          )}
+          <button
+            type="button"
+            className="panel-link relationship-more-toggle"
+            aria-expanded={expanded}
+            aria-controls={expanded ? "relationship-more" : undefined}
+            onClick={() => setExpandedId(expanded ? null : selected.id)}
+          >
+            Mostrar {expanded ? "menos" : "mais"}{" "}
+            <ChevronDown size={16} aria-hidden="true" />
+          </button>
         </div>
+        {expanded && (
+          <div id="relationship-more" className="relationship-more">
+            {selected.lastSyncedAt && (
+              <p className="muted text-xs">
+                Última sincronização:{" "}
+                {new Date(selected.lastSyncedAt).toLocaleString("pt-BR")}
+              </p>
+            )}
+            <h3>TRANSAÇÕES VINCULADAS</h3>
+            {selectedTransactions.length ? (
+              <ul className="relationship-transaction-list">
+                {selectedTransactions.slice(0, 5).map((transaction) => (
+                  <li key={transaction.id}>
+                    <div>
+                      <strong>{transaction.description}</strong>
+                      <small>
+                        {new Date(
+                          `${transaction.date}T12:00:00`,
+                        ).toLocaleDateString("pt-BR")}{" "}
+                        · {transaction.category}
+                      </small>
+                    </div>
+                    <Money
+                      cents={
+                        transaction.type === "expense"
+                          ? -transaction.amountCents
+                          : transaction.amountCents
+                      }
+                    />
+                  </li>
+                ))}
+              </ul>
+            ) : (
+              <p className="muted text-sm">Nenhuma transação vinculada.</p>
+            )}
+            <div className="relationship-more-actions">
+              <Link href="/transactions" className="panel-link">
+                Ver todas as transações <ArrowRight size={15} />
+              </Link>
+              {canManageCard && (
+                <>
+                  <button
+                    type="button"
+                    className="btn btn-outline"
+                    onClick={() => onEdit(selected)}
+                  >
+                    Editar cartão
+                  </button>
+                  <button
+                    type="button"
+                    className="btn btn-outline text-danger"
+                    onClick={() => onRemove(selected)}
+                  >
+                    Excluir cartão
+                  </button>
+                </>
+              )}
+              {connection && connection.status !== "disconnected" && (
+                <OpenFinanceControls
+                  connectionId={connection.id}
+                  itemId={connection.providerItemId}
+                />
+              )}
+            </div>
+          </div>
+        )}
       </div>
     </section>
   );

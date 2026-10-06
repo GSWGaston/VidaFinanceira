@@ -1680,6 +1680,60 @@ button:disabled {
   border-top: 1px solid var(--border);
   padding-top: 20px;
 }
+.relationship-more-toggle svg {
+  transition: transform 0.2s ease;
+}
+.relationship-more-toggle[aria-expanded="true"] svg {
+  transform: rotate(180deg);
+}
+.relationship-more {
+  display: grid;
+  gap: 14px;
+  padding-top: 20px;
+}
+.relationship-more > h3 {
+  color: var(--primary);
+  font-size: 11px;
+  font-weight: 850;
+  letter-spacing: 0.11em;
+}
+.relationship-transaction-list {
+  display: grid;
+  gap: 0;
+}
+.relationship-transaction-list li {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 16px;
+  padding: 11px 0;
+  border-bottom: 1px solid var(--border);
+}
+.relationship-transaction-list li > div {
+  display: grid;
+  gap: 2px;
+  min-width: 0;
+}
+.relationship-transaction-list li strong {
+  font-size: 13px;
+  overflow-wrap: anywhere;
+}
+.relationship-transaction-list li small {
+  color: var(--muted);
+  font-size: 11px;
+}
+.relationship-transaction-list li > span {
+  flex-shrink: 0;
+  font-size: 13px;
+  font-weight: 750;
+}
+.relationship-more-actions {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 12px;
+  padding-top: 4px;
+}
 @media (max-width: 720px) {
   .relationship-sections {
     grid-template-columns: 1fr;

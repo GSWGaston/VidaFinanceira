@@ -16,6 +16,24 @@ export function relationshipOverview(data: FinanceData, account: Account) {
     account.providerBalanceCents != null ||
     account.openingBalanceCents !== 0 ||
     linkedTransactions.length > 0;
+  // Manual entries affect the account balance. Imported/provider entries in a
+  // mixed relationship have no credit/debit marker in the current model.
+  const unclassified =
+    hasAccount &&
+    hasCredit &&
+    linkedTransactions.some((item) => item.source && item.source !== "manual");
+  const creditMovementsCount = !hasCredit
+    ? null
+    : unclassified
+      ? null
+      : hasAccount
+        ? 0
+        : linkedTransactions.length;
+  const debitMovementsCount = !hasAccount
+    ? null
+    : unclassified
+      ? null
+      : linkedTransactions.length;
   return {
     hasCredit,
     credit: hasCredit ? creditLineForAccount(account) : null,
@@ -24,6 +42,7 @@ export function relationshipOverview(data: FinanceData, account: Account) {
       hasAccount && balanceKnown
         ? balanceFor(data, account.id, "account")
         : null,
-    linkedTransactionsCount: hasAccount ? linkedTransactions.length : null,
+    creditMovementsCount,
+    debitMovementsCount,
   };
 }
