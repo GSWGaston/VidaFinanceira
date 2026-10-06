@@ -70,13 +70,18 @@ export class LocalRepository implements FinanceRepository {
         entry.id === item.id && (!entry.source || entry.source === "manual"),
     );
     if (!account) throw new Error("Cartão manual não encontrado.");
+    const hasCredit =
+      account.creditLimitCents != null ||
+      account.creditAvailableCents != null ||
+      account.creditUsedCents != null;
     Object.assign(account, {
       creditLimitCents: null,
       creditAvailableCents: null,
       creditUsedCents: null,
       creditLineId: null,
     });
-    if (account.hasLinkedAccount === false) account.active = false;
+    if (!hasCredit || account.hasLinkedAccount === false)
+      account.active = false;
     localStorage.setItem(localKey, JSON.stringify(data));
   }
   addBenefit(item: Benefit) {
@@ -313,6 +318,10 @@ export class SupabaseRepository implements FinanceRepository {
     if (!data) throw new Error("Cartão manual não encontrado.");
   }
   async removeCard(item: Account) {
+    const hasCredit =
+      item.creditLimitCents != null ||
+      item.creditAvailableCents != null ||
+      item.creditUsedCents != null;
     const { data, error } = await this.client
       .from("accounts")
       .update({
@@ -320,7 +329,9 @@ export class SupabaseRepository implements FinanceRepository {
         credit_available_cents: null,
         credit_used_cents: null,
         credit_line_id: null,
-        ...(item.hasLinkedAccount === false && { active: false }),
+        ...((!hasCredit || item.hasLinkedAccount === false) && {
+          active: false,
+        }),
       })
       .eq("id", item.id)
       .eq("user_id", this.userId)

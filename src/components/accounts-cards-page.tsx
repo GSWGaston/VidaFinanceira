@@ -1,31 +1,29 @@
 "use client";
 
-import Link from "next/link";
 import { useEffect, useState } from "react";
-import {
-  ArrowLeft,
-  CreditCard,
-  Landmark,
-  Plus,
-  WalletCards,
-} from "lucide-react";
+import { CreditCard, Landmark, Plus, WalletCards } from "lucide-react";
 import type { Account } from "@/lib/model";
 import { useApp } from "./app-provider";
 import { CreditCardCarousel } from "./credit-card-carousel";
 import { AccountDialog, BenefitDialog } from "./forms";
 import { OpenFinanceControls } from "./open-finance-connect";
 import { Sheet } from "./primitives";
-import { Badge, LoadingCards } from "./ui";
+import { Badge, DialogFrame, LoadingCards } from "./ui";
 
 export function AccountsCardsPage() {
   const { data, loading, error, reload } = useApp();
   const [addOpen, setAddOpen] = useState(false);
   const [accountOpen, setAccountOpen] = useState(false);
+  const [editingAccount, setEditingAccount] = useState<Account | null>(null);
+  const [accountDialogVersion, setAccountDialogVersion] = useState(0);
   const [cardOpen, setCardOpen] = useState(false);
   const [editingCard, setEditingCard] = useState<Account | null>(null);
   const [cardDialogVersion, setCardDialogVersion] = useState(0);
   const [initialRemove, setInitialRemove] = useState(false);
   const [benefitOpen, setBenefitOpen] = useState(false);
+  const [inspectedAccount, setInspectedAccount] = useState<Account | null>(
+    null,
+  );
   const syncing =
     data.connections?.some((connection) => connection.status === "syncing") ??
     false;
@@ -43,6 +41,15 @@ export function AccountsCardsPage() {
 
   const openAccount = () => {
     setAddOpen(false);
+    setEditingAccount(null);
+    setInitialRemove(false);
+    setAccountDialogVersion((version) => version + 1);
+    setAccountOpen(true);
+  };
+  const openAccountEditor = (account: Account, remove = false) => {
+    setEditingAccount(account);
+    setInitialRemove(remove);
+    setAccountDialogVersion((version) => version + 1);
     setAccountOpen(true);
   };
   const openCard = () => {
@@ -57,6 +64,14 @@ export function AccountsCardsPage() {
     setInitialRemove(remove);
     setCardDialogVersion((version) => version + 1);
     setCardOpen(true);
+  };
+  const editSelected = (account: Account, remove = false) => {
+    const hasCredit =
+      account.creditLimitCents != null ||
+      account.creditAvailableCents != null ||
+      account.creditUsedCents != null;
+    if (hasCredit) openCardEditor(account, remove);
+    else openAccountEditor(account, remove);
   };
   const openBenefit = () => {
     setAddOpen(false);
@@ -74,13 +89,6 @@ export function AccountsCardsPage() {
     <div className="accounts-cards-page">
       <div className="accounts-cards-heading">
         <div>
-          <Link
-            href="/"
-            className="accounts-back"
-            aria-label="Voltar para início"
-          >
-            <ArrowLeft size={20} />
-          </Link>
           <p className="eyebrow">SEU DINHEIRO</p>
           <h1 className="page-title">Contas & cartões</h1>
         </div>
@@ -104,8 +112,9 @@ export function AccountsCardsPage() {
             data={data}
             onAddManual={openCard}
             onAddAccount={openAccount}
-            onEdit={(account) => openCardEditor(account)}
-            onRemove={(account) => openCardEditor(account, true)}
+            onEdit={(account) => editSelected(account)}
+            onRemove={(account) => editSelected(account, true)}
+            onInspect={setInspectedAccount}
           />
           {orphanedConnections.length > 0 && (
             <section className="accounts-connections">
@@ -163,7 +172,13 @@ export function AccountsCardsPage() {
           </button>
         </div>
       </Sheet>
-      <AccountDialog open={accountOpen} onOpenChange={setAccountOpen} />
+      <AccountDialog
+        key={accountDialogVersion}
+        open={accountOpen}
+        onOpenChange={setAccountOpen}
+        editingAccount={editingAccount}
+        initialRemove={initialRemove}
+      />
       <AccountDialog
         key={cardDialogVersion}
         open={cardOpen}
@@ -173,6 +188,19 @@ export function AccountsCardsPage() {
         initialRemove={initialRemove}
       />
       <BenefitDialog open={benefitOpen} onOpenChange={setBenefitOpen} />
+      <DialogFrame
+        open={inspectedAccount !== null}
+        onOpenChange={(open) => {
+          if (!open) setInspectedAccount(null);
+        }}
+        title={inspectedAccount?.name ?? "Conta conectada"}
+        description="Conta sincronizada pelo Open Finance."
+      >
+        <p className="muted mb-4 text-sm">{inspectedAccount?.institution}</p>
+        {inspectedAccount?.connectionId && (
+          <OpenFinanceControls connectionId={inspectedAccount.connectionId} />
+        )}
+      </DialogFrame>
     </div>
   );
 }

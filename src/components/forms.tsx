@@ -71,24 +71,33 @@ export function AccountDialog({
       ? {
           name: editingAccount.name,
           institution:
-            editingAccount.institutionId ??
-            normalizeInstitutionName(editingAccount.institution) ??
-            "",
+            mode === "card"
+              ? (editingAccount.institutionId ??
+                normalizeInstitutionName(editingAccount.institution) ??
+                "")
+              : editingAccount.institution,
           kind: editingAccount.kind,
           openingBalance: (editingAccount.openingBalanceCents / 100)
             .toFixed(2)
             .replace(".", ","),
           color: editingAccount.color,
-          creditLimit: ((editingAccount.creditLimitCents ?? 0) / 100)
-            .toFixed(2)
-            .replace(".", ","),
-          creditAvailable: (
-            (editingAccount.creditAvailableCents ??
-              (editingAccount.creditLimitCents ?? 0) -
-                (editingAccount.creditUsedCents ?? 0)) / 100
-          )
-            .toFixed(2)
-            .replace(".", ","),
+          creditLimit:
+            editingAccount.creditLimitCents == null
+              ? ""
+              : (editingAccount.creditLimitCents / 100)
+                  .toFixed(2)
+                  .replace(".", ","),
+          creditAvailable:
+            editingAccount.creditLimitCents == null &&
+            editingAccount.creditAvailableCents == null
+              ? ""
+              : (
+                  (editingAccount.creditAvailableCents ??
+                    (editingAccount.creditLimitCents ?? 0) -
+                      (editingAccount.creditUsedCents ?? 0)) / 100
+                )
+                  .toFixed(2)
+                  .replace(".", ","),
           hasLinkedAccount: editingAccount.hasLinkedAccount ?? true,
         }
       : {
@@ -134,7 +143,10 @@ export function AccountDialog({
         id: editingAccount?.id ?? crypto.randomUUID(),
         name: result.data.name,
         institution: result.data.institution,
-        institutionId: mode === "card" ? selectedInstitution?.id : null,
+        institutionId:
+          mode === "card"
+            ? selectedInstitution?.id
+            : (editingAccount?.institutionId ?? null),
         hasLinkedAccount: mode === "card" ? raw.hasLinkedAccount : true,
         kind: result.data.kind,
         openingBalanceCents: result.data.openingBalance,
@@ -160,12 +172,16 @@ export function AccountDialog({
       onOpenChange={onOpenChange}
       title={
         confirmRemove
-          ? "Excluir cartão"
+          ? mode === "card"
+            ? "Excluir cartão"
+            : "Excluir conta"
           : mode === "card"
             ? editingAccount
               ? "Editar cartão"
               : "Novo cartão manual"
-            : "Nova conta"
+            : editingAccount
+              ? "Editar conta"
+              : "Nova conta"
       }
       description={
         mode === "card"
@@ -176,9 +192,11 @@ export function AccountDialog({
       {confirmRemove ? (
         <div className="space-y-4">
           <p>
-            Remover o cartão <strong>{editingAccount?.name}</strong>? As
-            transações serão preservadas.
-            {editingAccount?.hasLinkedAccount !== false &&
+            Excluir {mode === "card" ? "o cartão" : "a conta"}{" "}
+            <strong>{editingAccount?.name}</strong>? As transações serão
+            preservadas.
+            {mode === "card" &&
+              editingAccount?.hasLinkedAccount !== false &&
               " A conta vinculada também será mantida."}
           </p>
           {error && <ErrorText message={error} />}
@@ -203,13 +221,15 @@ export function AccountDialog({
                   await removeCard(editingAccount);
                   onOpenChange(false);
                 } catch {
-                  setError("Não foi possível remover o cartão.");
+                  setError(
+                    `Não foi possível excluir ${mode === "card" ? "o cartão" : "a conta"}.`,
+                  );
                 } finally {
                   setBusy(false);
                 }
               }}
             >
-              Excluir cartão
+              Excluir {mode === "card" ? "cartão" : "conta"}
             </button>
           </div>
         </div>
@@ -363,7 +383,7 @@ export function AccountDialog({
                 className="btn btn-outline w-full"
                 onClick={() => setConfirmRemove(true)}
               >
-                Remover cartão
+                Excluir {mode === "card" ? "cartão" : "conta"}
               </button>
             </div>
           )}

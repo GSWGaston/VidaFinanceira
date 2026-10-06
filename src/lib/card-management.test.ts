@@ -85,4 +85,18 @@ describe("manual card management", () => {
     });
     expect(saved.transactions).toEqual([transaction]);
   });
+  it("hides a removed account without deleting its transactions", async () => {
+    const repo = new LocalRepository();
+    const account = {
+      ...card,
+      creditLimitCents: null,
+      creditAvailableCents: null,
+    };
+    await repo.addAccount(account);
+    await repo.addTransaction(transaction);
+    await repo.removeCard(account);
+    const saved = await repo.load();
+    expect(saved.accounts[0]).toMatchObject({ id: card.id, active: false });
+    expect(saved.transactions).toEqual([transaction]);
+  });
 });

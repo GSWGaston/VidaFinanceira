@@ -59,18 +59,24 @@ export function CreditCardCarousel({
   onAddAccount,
   onEdit,
   onRemove,
+  onInspect,
 }: {
   data: FinanceData;
   onAddManual: () => void;
   onAddAccount: () => void;
   onEdit: (account: Account) => void;
   onRemove: (account: Account) => void;
+  onInspect: (account: Account) => void;
 }) {
   const accounts = data.accounts.filter((account) => account.active);
   const [selectedId, setSelectedId] = useState<string | null>(null);
   const [expandedId, setExpandedId] = useState<string | null>(null);
   const viewport = useRef<HTMLDivElement>(null);
-  const pointer = useRef<{ x: number; scroll: number } | null>(null);
+  const pointer = useRef<{
+    x: number;
+    scroll: number;
+    kind: string;
+  } | null>(null);
   const moved = useRef(false);
   const selectedIndex = Math.max(
     0,
@@ -158,7 +164,6 @@ export function CreditCardCarousel({
   );
   const expanded = expandedId === selected.id;
   const canManageCard =
-    hasCredit &&
     (!selected.source || selected.source === "manual") &&
     !selected.connectionId;
   return (
@@ -168,28 +173,30 @@ export function CreditCardCarousel({
         ref={viewport}
         onScroll={syncSelection}
         onPointerDown={(event) => {
-          if (event.pointerType === "mouse") {
-            pointer.current = {
-              x: event.clientX,
-              scroll: event.currentTarget.scrollLeft,
-            };
-            moved.current = false;
-          }
+          pointer.current = {
+            x: event.clientX,
+            scroll: event.currentTarget.scrollLeft,
+            kind: event.pointerType,
+          };
+          moved.current = false;
         }}
         onPointerMove={(event) => {
           if (pointer.current) {
             const delta = event.clientX - pointer.current.x;
-            if (Math.abs(delta) > 5)
+            if (Math.abs(delta) > 12) moved.current = true;
+            if (pointer.current.kind === "mouse" && Math.abs(delta) > 5)
               event.currentTarget.scrollLeft = pointer.current.scroll - delta;
           }
         }}
         onPointerUp={(event) => {
           if (pointer.current)
-            moved.current = Math.abs(event.clientX - pointer.current.x) > 12;
+            moved.current =
+              moved.current || Math.abs(event.clientX - pointer.current.x) > 12;
           pointer.current = null;
         }}
         onPointerCancel={() => {
           pointer.current = null;
+          moved.current = true;
         }}
         onKeyDown={(event) => {
           if (event.key === "ArrowRight" || event.key === "ArrowLeft") {
@@ -213,10 +220,15 @@ export function CreditCardCarousel({
             type="button"
             className="credit-carousel-item"
             key={account.id}
-            aria-label={`Selecionar ${account.name}`}
+            aria-label={`${!account.source || account.source === "manual" ? "Editar" : "Ver"} ${account.name}`}
             aria-pressed={index === selectedIndex}
             onClick={() => {
-              if (!moved.current) center(index);
+              if (!moved.current) {
+                center(index);
+                if (!account.source || account.source === "manual")
+                  onEdit(account);
+                else onInspect(account);
+              }
               moved.current = false;
             }}
           >
@@ -391,14 +403,14 @@ export function CreditCardCarousel({
                     className="btn btn-outline"
                     onClick={() => onEdit(selected)}
                   >
-                    Editar cartão
+                    Editar {hasCredit ? "cartão" : "conta"}
                   </button>
                   <button
                     type="button"
                     className="btn btn-outline text-danger"
                     onClick={() => onRemove(selected)}
                   >
-                    Excluir cartão
+                    Excluir {hasCredit ? "cartão" : "conta"}
                   </button>
                 </>
               )}

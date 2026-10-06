@@ -1,6 +1,6 @@
 "use client";
 import Link from "next/link";
-import { usePathname } from "next/navigation";
+import { usePathname, useRouter } from "next/navigation";
 import {
   BarChart3,
   CalendarRange,
@@ -21,8 +21,9 @@ import {
   Moon,
   Search,
   UserRound,
+  ArrowLeft,
 } from "lucide-react";
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { useApp } from "./app-provider";
 import { TransactionDialog } from "./forms";
 import { Brand } from "./brand";
@@ -47,11 +48,20 @@ const navigation = [
 const mainMobile = navigation.slice(0, 4);
 export function AppShell({ children }: { children: React.ReactNode }) {
   const path = usePathname();
+  const router = useRouter();
+  const lastPath = useRef(path);
+  const hasInternalHistory = useRef(false);
   const { local, data } = useApp();
   const [more, setMore] = useState(false);
   const [transactionOpen, setTransactionOpen] = useState(false);
   const [dark, setDark] = useState(false);
   const [localNotice, setLocalNotice] = useState(true);
+  useEffect(() => {
+    if (lastPath.current !== path) {
+      hasInternalHistory.current = true;
+      lastPath.current = path;
+    }
+  }, [path]);
   useEffect(() => {
     if (path !== "/") return;
     let frame = 0;
@@ -205,6 +215,20 @@ export function AppShell({ children }: { children: React.ReactNode }) {
                 <X size={15} />
               </button>
             </div>
+          )}
+          {path !== "/" && (
+            <button
+              type="button"
+              className="page-back"
+              aria-label="Voltar para a tela anterior"
+              onClick={() => {
+                if (hasInternalHistory.current && window.history.length > 1)
+                  router.back();
+                else router.push("/");
+              }}
+            >
+              <ArrowLeft size={20} />
+            </button>
           )}
           {children}
         </main>
