@@ -14,6 +14,8 @@ export function creditLineForAccount(account: Account) {
   const available = account.creditAvailableCents;
   const used = account.creditUsedCents;
   if (total == null || !Number.isSafeInteger(total) || total < 0) return null;
+  if (used != null && Number.isSafeInteger(used) && used > total)
+    return { total, available: 0, used };
   if (
     available != null &&
     Number.isSafeInteger(available) &&

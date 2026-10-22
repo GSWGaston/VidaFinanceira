@@ -85,6 +85,23 @@ describe("credit overview", () => {
       ),
     ).toMatchObject({ totalCents: 0, availableCents: 0, usagePercentage: 0 });
   });
+  it("preserves over-limit usage while allowing the visual bar to cap at 100%", () => {
+    expect(
+      creditOverview(
+        data(
+          account("over", {
+            creditLimitCents: 100000,
+            creditUsedCents: 120000,
+          }),
+        ),
+      ),
+    ).toMatchObject({
+      totalCents: 100000,
+      availableCents: 0,
+      usedCents: 120000,
+      usagePercentage: 120,
+    });
+  });
 
   it("ignores invalid and inactive credit lines", () => {
     expect(

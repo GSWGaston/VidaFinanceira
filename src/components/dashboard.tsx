@@ -7,6 +7,8 @@ import {
   ArrowRight,
   ArrowUpRight,
   CalendarClock,
+  CreditCard,
+  Info,
   WalletCards,
 } from "lucide-react";
 import { Cell, Pie, PieChart, ResponsiveContainer, Tooltip } from "recharts";
@@ -95,7 +97,16 @@ export function Dashboard() {
           </div>
           <div className="home-content-surface">
             <div className="home-content-inner">
-              {credit && <CreditSummary credit={credit} />}
+              <CreditSummary
+                credit={credit}
+                hasCard={data.accounts.some(
+                  (account) =>
+                    account.active &&
+                    (account.creditLimitCents != null ||
+                      account.creditAvailableCents != null ||
+                      account.creditUsedCents != null),
+                )}
+              />
               <div className="home-content-grid">
                 <CategoryCard
                   categories={categories}
@@ -120,41 +131,89 @@ export function Dashboard() {
   );
 }
 
-function CreditSummary({ credit }: { credit: CreditOverview }) {
-  const percentage = Math.round(credit.usagePercentage);
+function CreditSummary({
+  credit,
+  hasCard,
+}: {
+  credit: CreditOverview | null;
+  hasCard: boolean;
+}) {
+  const percentage = credit
+    ? Math.round(Math.max(0, credit.usagePercentage))
+    : 0;
+  const progress = Math.min(100, percentage);
   return (
-    <div className="credit-summary">
-      <div className="credit-summary-top">
-        <span>Crédito disponível</span>
-        <span className="credit-summary-amount">
-          <Money cents={credit.availableCents} />
-          <span> de </span>
-          <Money cents={credit.totalCents} />
+    <section className="credit-summary" aria-label="Resumo do crédito">
+      <div className="credit-summary-header">
+        <span className="credit-summary-icon" aria-hidden="true">
+          <CreditCard size={21} />
         </span>
+        <h2>Crédito disponível</h2>
+        <details className="credit-summary-info">
+          <summary aria-label="Informações sobre o crédito disponível">
+            <Info size={19} />
+          </summary>
+          <p>
+            Soma dos limites conhecidos dos seus cartões. A barra mostra a parte
+            utilizada.
+          </p>
+        </details>
       </div>
-      <div
-        className="credit-progress"
-        role="progressbar"
-        aria-label="Limite de crédito utilizado"
-        aria-valuemin={0}
-        aria-valuemax={100}
-        aria-valuenow={percentage}
-      >
-        <span style={{ width: `${credit.usagePercentage}%` }} />
-      </div>
-      <div className="credit-summary-bottom">
-        <span>
-          <Money cents={credit.usedCents} /> utilizado
-        </span>
-        <span>{percentage}% utilizado</span>
-      </div>
-      {credit.incompleteLines > 0 && (
-        <p className="credit-summary-note">
-          Limites conhecidos de {credit.knownLines}{" "}
-          {credit.knownLines === 1 ? "linha" : "linhas"}
-        </p>
+      {credit ? (
+        <>
+          <div className="credit-summary-values">
+            <Money
+              cents={credit.availableCents}
+              className="credit-summary-available"
+            />
+            <span className="credit-summary-total">
+              de <Money cents={credit.totalCents} />
+            </span>
+          </div>
+          <div
+            className="credit-progress"
+            role="progressbar"
+            aria-label="Limite de crédito utilizado"
+            aria-valuemin={0}
+            aria-valuemax={100}
+            aria-valuenow={progress}
+            aria-valuetext={`${percentage}% utilizado`}
+          >
+            <span style={{ width: `${progress}%` }} />
+          </div>
+          <div className="credit-summary-bottom">
+            <span className="credit-summary-used">
+              <i aria-hidden="true" />
+              <strong>
+                <Money cents={credit.usedCents} />
+              </strong>{" "}
+              utilizado
+            </span>
+            <span>
+              <strong>{percentage}%</strong> utilizado
+            </span>
+          </div>
+          {credit.incompleteLines > 0 && (
+            <p className="credit-summary-note">
+              Limites conhecidos de {credit.knownLines}{" "}
+              {credit.knownLines === 1 ? "linha" : "linhas"}
+            </p>
+          )}
+        </>
+      ) : (
+        <div className="credit-summary-empty">
+          <p>
+            {hasCard
+              ? "Dados de limite indisponíveis."
+              : "Nenhum cartão com limite cadastrado."}
+          </p>
+          <Link href="/accounts">
+            {hasCard ? "Ver cartões" : "Adicionar cartão"}{" "}
+            <ArrowRight size={15} />
+          </Link>
+        </div>
       )}
-    </div>
+    </section>
   );
 }
 

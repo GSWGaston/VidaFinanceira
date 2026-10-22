@@ -51,6 +51,11 @@
   --home-income: #b5f3c9;
   --home-expense: #fff0eb;
   --home-content: #ffffff;
+  --credit-card-bg: #fffaf9;
+  --credit-card-border: #fff0f3;
+  --credit-card-glow: #f8dfe7;
+  --credit-card-orbit: #f8eaf0;
+  --credit-track: #f2e3e7;
 }
 .dark {
   --background: #241512;
@@ -101,6 +106,11 @@
   --home-income: #a6eebc;
   --home-expense: #ffe6e2;
   --home-content: #30201c;
+  --credit-card-bg: #342521;
+  --credit-card-border: #63424d;
+  --credit-card-glow: #5a3745;
+  --credit-card-orbit: #4d303b;
+  --credit-track: #60434c;
 }
 @theme inline {
   --color-background: var(--background);
@@ -642,48 +652,173 @@ button:disabled {
   background: var(--benefits-panel);
 }
 .credit-summary {
-  margin-top: 8px;
-  padding-top: 7px;
-  border-top: 1px solid #ffffff35;
+  position: relative;
+  overflow: hidden;
+  isolation: isolate;
+  border: 1px solid var(--credit-card-border);
+  border-radius: 22px;
+  background: var(--credit-card-bg);
+  box-shadow: 0 12px 30px var(--shadow);
+  padding: 20px;
 }
-.credit-summary-top,
+.credit-summary::before {
+  position: absolute;
+  z-index: -1;
+  top: -142px;
+  right: -100px;
+  width: 280px;
+  height: 280px;
+  border: 44px solid var(--credit-card-orbit);
+  border-radius: 50%;
+  background: var(--credit-card-glow);
+  content: "";
+  pointer-events: none;
+}
+.credit-summary-header {
+  display: flex;
+  align-items: center;
+  gap: 11px;
+}
+.credit-summary-header h2 {
+  color: var(--foreground);
+  font-size: clamp(15px, 2vw, 18px);
+  font-weight: 800;
+  letter-spacing: -0.025em;
+}
+.credit-summary-icon {
+  display: grid;
+  width: 40px;
+  height: 40px;
+  flex: 0 0 auto;
+  place-items: center;
+  border-radius: 14px;
+  background: var(--soft);
+  color: var(--accent-text);
+}
+.credit-summary-info {
+  position: relative;
+  margin-left: 1px;
+}
+.credit-summary-info summary {
+  display: grid;
+  width: 32px;
+  height: 32px;
+  place-items: center;
+  border-radius: 50%;
+  color: var(--muted);
+  cursor: pointer;
+  list-style: none;
+}
+.credit-summary-info summary::-webkit-details-marker {
+  display: none;
+}
+.credit-summary-info summary:focus-visible {
+  outline: 2px solid var(--accent);
+  outline-offset: 2px;
+}
+.credit-summary-info p {
+  position: absolute;
+  z-index: 2;
+  top: 35px;
+  right: -12px;
+  width: min(250px, 70vw);
+  padding: 10px 12px;
+  border: 1px solid var(--border);
+  border-radius: 12px;
+  background: var(--surface);
+  box-shadow: var(--shadow-sm);
+  color: var(--foreground);
+  font-size: 12px;
+  line-height: 1.4;
+}
+.credit-summary-values {
+  display: grid;
+  gap: 1px;
+  min-width: 0;
+  margin-top: 22px;
+}
+.credit-summary-available {
+  overflow: hidden;
+  color: var(--primary);
+  font-size: clamp(27px, 5vw, 40px);
+  font-weight: 850;
+  letter-spacing: -0.055em;
+  line-height: 1.12;
+  overflow-wrap: anywhere;
+}
+.credit-summary-total {
+  color: var(--muted);
+  font-size: 14px;
+}
+.credit-summary-total span {
+  color: inherit;
+}
 .credit-summary-bottom {
   display: flex;
-  flex-wrap: wrap;
+  align-items: center;
   justify-content: space-between;
-  gap: 8px;
-  color: #ffffffd9;
-  font-size: 11px;
-  font-weight: 700;
+  gap: 12px;
+  color: var(--muted);
+  font-size: 13px;
+  white-space: nowrap;
 }
-.credit-summary-amount {
-  font-size: 12px;
+.credit-summary-bottom strong {
+  color: var(--primary);
+  font-weight: 850;
+}
+.credit-summary-used {
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+  min-width: 0;
+}
+.credit-summary-used i {
+  width: 10px;
+  height: 10px;
+  flex: 0 0 auto;
+  border-radius: 50%;
+  background: var(--accent);
+}
+.credit-summary-used strong {
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+.credit-summary-note {
+  margin-top: 10px;
+  color: var(--muted);
+  font-size: 11px;
+}
+.credit-summary-empty {
+  display: grid;
+  gap: 10px;
+  margin-top: 22px;
+  color: var(--muted);
+  font-size: 13px;
+}
+.credit-summary-empty a {
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+  width: fit-content;
+  color: var(--accent-text);
   font-weight: 800;
-  text-align: right;
 }
-.credit-summary-amount > span:not(:first-child) {
-  color: #ffffffc4;
-  font-size: 11px;
-  font-weight: 600;
+.credit-summary-empty a:focus-visible {
+  outline: 2px solid var(--accent);
+  outline-offset: 3px;
 }
 .credit-progress {
-  height: 3px;
-  margin-top: 5px;
+  height: 8px;
+  margin: 22px 0 14px;
   overflow: hidden;
   border-radius: 99px;
-  background: #ffffff3d;
+  background: var(--credit-track);
 }
 .credit-progress span {
   display: block;
   height: 100%;
   border-radius: inherit;
   background: var(--accent);
-}
-.credit-summary-bottom {
-  margin-top: 4px;
-  color: #ffffffb8;
-  font-size: 10px;
-  font-weight: 600;
 }
 .financial-summary {
   display: grid;
@@ -1122,16 +1257,6 @@ button:disabled {
   padding-top: 18px;
 }
 @media (max-width: 767px) {
-  .credit-summary {
-    margin-top: 6px;
-    padding-top: 6px;
-  }
-  .credit-summary-top {
-    font-size: 10px;
-  }
-  .credit-summary-amount {
-    font-size: 10px;
-  }
   .financial-summary {
     border-radius: 16px;
   }
@@ -1596,24 +1721,6 @@ button:disabled {
 .home-content-inner > .credit-summary {
   max-width: 570px;
   margin: 0 auto 24px;
-  border: 1px solid var(--color-border);
-  border-radius: var(--radius-md);
-  background: var(--color-surface-soft);
-  color: var(--color-text);
-  padding: 16px 18px;
-}
-.home-content-inner > .credit-summary .credit-summary-bottom,
-.home-content-inner
-  > .credit-summary
-  .credit-summary-amount
-  > span:not(:first-child) {
-  color: var(--color-text-secondary);
-}
-.home-content-inner > .credit-summary .credit-summary-top {
-  color: var(--color-text);
-}
-.home-content-inner > .credit-summary .credit-progress {
-  background: var(--color-border);
 }
 .home-content-grid {
   display: grid;
