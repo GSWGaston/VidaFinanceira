@@ -7,10 +7,6 @@ import {
   ArrowRight,
   ArrowUpRight,
   CalendarClock,
-  CreditCard,
-  ListFilter,
-  Plus,
-  CalendarRange,
   WalletCards,
 } from "lucide-react";
 import { Cell, Pie, PieChart, ResponsiveContainer, Tooltip } from "recharts";
@@ -99,12 +95,6 @@ export function Dashboard() {
           </div>
           <div className="home-content-surface">
             <div className="home-content-inner">
-              <div className="home-actions-section">
-                <h2>Ações rápidas</h2>
-                <QuickActions
-                  onNewTransaction={() => setTransactionOpen(true)}
-                />
-              </div>
               {credit && <CreditSummary credit={credit} />}
               <div className="home-content-grid">
                 <CategoryCard
@@ -126,40 +116,6 @@ export function Dashboard() {
         open={transactionOpen}
         onOpenChange={setTransactionOpen}
       />
-    </div>
-  );
-}
-
-function QuickActions({ onNewTransaction }: { onNewTransaction: () => void }) {
-  const actions = [
-    { label: "Cartões", icon: CreditCard, href: "/cards" },
-    { label: "Gastos", icon: ListFilter, href: "/transactions?type=expense" },
-  ];
-  return (
-    <div className="home-quick-actions" aria-label="Ações rápidas">
-      {actions.slice(0, 2).map(({ label, icon: Icon, href }) => (
-        <Link key={label} href={href} className="home-quick-action">
-          <span>
-            <Icon size={19} />
-          </span>
-          {label}
-        </Link>
-      ))}
-      <button
-        className="home-quick-action home-quick-action-main"
-        onClick={onNewTransaction}
-      >
-        <span>
-          <Plus size={21} />
-        </span>
-        Lançar
-      </button>
-      <Link href="/planning" className="home-quick-action">
-        <span>
-          <CalendarRange size={19} />
-        </span>
-        Planejar
-      </Link>
     </div>
   );
 }

@@ -4,6 +4,7 @@ import { usePathname, useRouter } from "next/navigation";
 import {
   BarChart3,
   CalendarRange,
+  CreditCard,
   Download,
   House,
   Landmark,
@@ -45,7 +46,14 @@ const navigation = [
   { href: "/imports", label: "Importar dados", icon: Download },
   { href: "/settings", label: "Configurações", icon: Settings },
 ];
-const mobileDestinations = [navigation[0], navigation[1], navigation[2]];
+const mobileDestinations = [
+  navigation[0],
+  { href: "/accounts", label: "Cartões", icon: CreditCard },
+  navigation[1],
+];
+const moreDestinations = navigation.filter(
+  ({ href }) => !["/", "/transactions", "/accounts"].includes(href),
+);
 export function AppShell({ children }: { children: React.ReactNode }) {
   const path = usePathname();
   const router = useRouter();
@@ -297,16 +305,16 @@ export function AppShell({ children }: { children: React.ReactNode }) {
           >
             <Plus size={28} />
           </button>
-          {mobileDestinations.slice(2).map(({ href, icon: Icon }) => (
+          {mobileDestinations.slice(2).map(({ href, label, icon: Icon }) => (
             <Link
               key={href}
               href={href}
               onClick={() => setQuickActionsOpen(false)}
-              aria-label="Planejar"
+              aria-label={label}
               aria-current={path === href ? "page" : undefined}
               className={`mobile-nav-item ${path === href ? "mobile-nav-active" : ""}`}
             >
-              <Icon size={22} /> <span>Planejar</span>
+              <Icon size={22} /> <span>{label}</span>
             </Link>
           ))}
           <button
@@ -329,7 +337,7 @@ export function AppShell({ children }: { children: React.ReactNode }) {
       </div>
       <Sheet open={more} onOpenChange={setMore} title="Mais opções">
         <div className="grid grid-cols-2 gap-2">
-          {navigation.slice(3).map(({ href, label, icon: Icon }) => (
+          {moreDestinations.map(({ href, label, icon: Icon }) => (
             <Link
               key={href}
               href={href}

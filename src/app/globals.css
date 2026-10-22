@@ -1593,55 +1593,6 @@ button:disabled {
   max-width: 1140px;
   margin: auto;
 }
-.home-actions-section {
-  max-width: 570px;
-  margin: 0 auto 24px;
-}
-.home-actions-section h2 {
-  margin-bottom: 14px;
-  font-size: 16px;
-  font-weight: 800;
-}
-.home-quick-actions {
-  display: grid;
-  width: 100%;
-  grid-template-columns: repeat(4, minmax(0, 1fr));
-  gap: 0;
-}
-.home-quick-action {
-  display: flex;
-  min-height: 76px;
-  min-width: 0;
-  flex-direction: column;
-  align-items: center;
-  gap: 7px;
-  color: var(--color-text-secondary);
-  font-size: 12px;
-  font-weight: 700;
-  text-align: center;
-}
-.home-quick-action > span {
-  display: grid;
-  width: 48px;
-  height: 48px;
-  place-items: center;
-  border: 1px solid var(--color-border);
-  border-radius: var(--radius-sm);
-  background: var(--color-surface-soft);
-  color: var(--primary);
-}
-.home-quick-action-main > span {
-  border-color: var(--accent);
-  background: var(--accent);
-  color: var(--accent-foreground);
-}
-.home-quick-action:hover > span {
-  border-color: var(--accent);
-  background: var(--soft);
-}
-.home-quick-action-main:hover > span {
-  background: var(--accent);
-}
 .home-content-inner > .credit-summary {
   max-width: 570px;
   margin: 0 auto 24px;
