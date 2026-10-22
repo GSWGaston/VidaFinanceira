@@ -45,7 +45,7 @@ const navigation = [
   { href: "/imports", label: "Importar dados", icon: Download },
   { href: "/settings", label: "Configurações", icon: Settings },
 ];
-const mainMobile = navigation.slice(0, 4);
+const mobileDestinations = [navigation[0], navigation[1], navigation[2]];
 export function AppShell({ children }: { children: React.ReactNode }) {
   const path = usePathname();
   const router = useRouter();
@@ -53,9 +53,31 @@ export function AppShell({ children }: { children: React.ReactNode }) {
   const hasInternalHistory = useRef(false);
   const { local, data } = useApp();
   const [more, setMore] = useState(false);
+  const [quickActionsOpen, setQuickActionsOpen] = useState(false);
+  const quickActionsRef = useRef<HTMLDivElement>(null);
+  const quickActionButtonRef = useRef<HTMLButtonElement>(null);
   const [transactionOpen, setTransactionOpen] = useState(false);
   const [dark, setDark] = useState(false);
   const [localNotice, setLocalNotice] = useState(true);
+  useEffect(() => {
+    if (!quickActionsOpen) return;
+    const closeOutside = (event: PointerEvent) => {
+      if (!quickActionsRef.current?.contains(event.target as Node))
+        setQuickActionsOpen(false);
+    };
+    const closeEscape = (event: KeyboardEvent) => {
+      if (event.key === "Escape") {
+        setQuickActionsOpen(false);
+        quickActionButtonRef.current?.focus();
+      }
+    };
+    document.addEventListener("pointerdown", closeOutside);
+    document.addEventListener("keydown", closeEscape);
+    return () => {
+      document.removeEventListener("pointerdown", closeOutside);
+      document.removeEventListener("keydown", closeEscape);
+    };
+  }, [quickActionsOpen]);
   useEffect(() => {
     if (lastPath.current !== path) {
       hasInternalHistory.current = true;
@@ -233,32 +255,78 @@ export function AppShell({ children }: { children: React.ReactNode }) {
           {children}
         </main>
       </div>
-      <nav
-        aria-label="Navegação móvel"
-        className="safe-bottom fixed inset-x-0 bottom-0 z-30 flex border-t border-border bg-surface shadow-[0_-8px_30px_#0000000b] lg:hidden"
-      >
-        {mainMobile.map(({ href, label, icon: Icon }) => (
-          <Link
-            key={href}
-            href={href}
-            aria-current={path === href ? "page" : undefined}
-            className={`flex min-h-[61px] flex-1 flex-col items-center justify-center gap-1 text-[10px] font-bold ${path === href ? "mobile-nav-active text-accent-text" : "text-muted"}`}
+      <div className="mobile-nav-wrap lg:hidden" ref={quickActionsRef}>
+        {quickActionsOpen && (
+          <div className="mobile-quick-menu" id="mobile-quick-menu" role="menu">
+            <button
+              type="button"
+              role="menuitem"
+              onClick={() => {
+                setQuickActionsOpen(false);
+                setTransactionOpen(true);
+              }}
+            >
+              <Plus size={18} /> Adicionar gasto
+            </button>
+          </div>
+        )}
+        <nav aria-label="Navegação móvel" className="mobile-floating-nav">
+          {mobileDestinations.slice(0, 2).map(({ href, label, icon: Icon }) => (
+            <Link
+              key={href}
+              href={href}
+              onClick={() => setQuickActionsOpen(false)}
+              aria-current={path === href ? "page" : undefined}
+              className={`mobile-nav-item ${path === href ? "mobile-nav-active" : ""}`}
+            >
+              <Icon size={22} /> <span>{label}</span>
+            </Link>
+          ))}
+          <button
+            ref={quickActionButtonRef}
+            type="button"
+            className="mobile-nav-add"
+            aria-label="Adicionar gasto"
+            aria-haspopup="menu"
+            aria-expanded={quickActionsOpen}
+            aria-controls={quickActionsOpen ? "mobile-quick-menu" : undefined}
+            onClick={() => setQuickActionsOpen((open) => !open)}
           >
-            <Icon size={21} />
-            {label === "Planejamento" ? "Planejar" : label}
-          </Link>
-        ))}
-        <button
-          onClick={() => setMore(true)}
-          className="flex min-h-[61px] flex-1 flex-col items-center justify-center gap-1 text-[10px] font-bold text-muted"
-        >
-          <Menu size={21} />
-          Mais
-        </button>
-      </nav>
+            <Plus size={28} />
+          </button>
+          {mobileDestinations.slice(2).map(({ href, icon: Icon }) => (
+            <Link
+              key={href}
+              href={href}
+              onClick={() => setQuickActionsOpen(false)}
+              aria-label="Planejar"
+              aria-current={path === href ? "page" : undefined}
+              className={`mobile-nav-item ${path === href ? "mobile-nav-active" : ""}`}
+            >
+              <Icon size={22} /> <span>Planejar</span>
+            </Link>
+          ))}
+          <button
+            type="button"
+            aria-label="Mais"
+            aria-current={
+              !mobileDestinations.some(({ href }) => href === path)
+                ? "page"
+                : undefined
+            }
+            onClick={() => {
+              setQuickActionsOpen(false);
+              setMore(true);
+            }}
+            className={`mobile-nav-item ${!mobileDestinations.some(({ href }) => href === path) ? "mobile-nav-active" : ""}`}
+          >
+            <Menu size={22} /> <span>Mais</span>
+          </button>
+        </nav>
+      </div>
       <Sheet open={more} onOpenChange={setMore} title="Mais opções">
         <div className="grid grid-cols-2 gap-2">
-          {navigation.slice(4).map(({ href, label, icon: Icon }) => (
+          {navigation.slice(3).map(({ href, label, icon: Icon }) => (
             <Link
               key={href}
               href={href}
@@ -271,15 +339,6 @@ export function AppShell({ children }: { children: React.ReactNode }) {
           ))}
         </div>
       </Sheet>
-      {!["/", "/transactions", "/accounts", "/cards"].includes(path) && (
-        <button
-          aria-label="Nova transação"
-          onClick={() => setTransactionOpen(true)}
-          className="fixed bottom-[76px] right-5 z-20 grid size-12 place-items-center rounded-full bg-accent text-accent-foreground shadow-xl sm:hidden lg:hidden"
-        >
-          <Plus size={23} />
-        </button>
-      )}
       <TransactionDialog
         open={transactionOpen}
         onOpenChange={setTransactionOpen}

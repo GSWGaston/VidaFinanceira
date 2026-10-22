@@ -277,17 +277,98 @@ button:disabled {
 .sidebar-link-active {
   box-shadow: inset 3px 0 var(--accent);
 }
-.mobile-nav-active {
-  position: relative;
+.mobile-nav-wrap {
+  position: fixed;
+  z-index: 30;
+  right: 14px;
+  bottom: calc(10px + env(safe-area-inset-bottom));
+  left: 14px;
 }
-.mobile-nav-active::before {
-  position: absolute;
-  top: 5px;
-  width: 17px;
-  height: 3px;
-  border-radius: 99px;
+.mobile-floating-nav {
+  display: grid;
+  grid-template-columns: repeat(5, minmax(0, 1fr));
+  align-items: center;
+  height: 72px;
+  padding: 6px 8px;
+  border: 1px solid var(--border);
+  border-radius: 26px;
+  background: var(--surface);
+  box-shadow: 0 12px 32px #00000020;
+}
+.mobile-nav-item {
+  display: flex;
+  min-width: 0;
+  min-height: 52px;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 3px;
+  color: var(--muted);
+  font-size: 10px;
+  font-weight: 700;
+  line-height: 1.1;
+}
+.mobile-nav-item.mobile-nav-active {
+  color: var(--accent-text);
+}
+.mobile-nav-add {
+  display: grid;
+  width: 56px;
+  height: 56px;
+  place-items: center;
+  justify-self: center;
+  align-self: start;
+  transform: translateY(-17px);
+  border-radius: 50%;
   background: var(--accent);
-  content: "";
+  color: var(--accent-foreground);
+  box-shadow: 0 5px 14px #00000025;
+}
+.mobile-quick-menu {
+  width: min(250px, 80vw);
+  margin: 0 auto 16px;
+  padding: 6px;
+  border: 1px solid var(--border);
+  border-radius: 16px;
+  background: var(--surface);
+  box-shadow: 0 10px 28px #00000022;
+  animation: mobile-menu-in 180ms ease-out;
+}
+.mobile-quick-menu button {
+  display: flex;
+  width: 100%;
+  min-height: 44px;
+  align-items: center;
+  gap: 10px;
+  padding: 8px 12px;
+  border-radius: 10px;
+  color: var(--foreground);
+  font-size: 13px;
+  font-weight: 700;
+}
+.mobile-quick-menu button:hover {
+  background: var(--background);
+}
+.mobile-nav-item:focus-visible,
+.mobile-nav-add:focus-visible,
+.mobile-quick-menu button:focus-visible {
+  outline: 2px solid var(--accent);
+  outline-offset: 3px;
+}
+@keyframes mobile-menu-in {
+  from {
+    opacity: 0;
+    transform: translateY(8px) scale(0.96);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0) scale(1);
+  }
+}
+@media (prefers-reduced-motion: reduce) {
+  .mobile-quick-menu {
+    animation: none;
+  }
 }
 .accounts-cards-page {
   max-width: 1140px;
@@ -1216,7 +1297,7 @@ button:disabled {
 /* Home: the fixed-height track keeps the document stable while its sticky hero contracts. */
 .home-main {
   max-width: 1450px;
-  padding: 0 0 96px;
+  padding: 0 0 calc(110px + env(safe-area-inset-bottom));
 }
 .home-dashboard {
   display: block;
