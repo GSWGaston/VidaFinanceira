@@ -81,23 +81,20 @@ export function Dashboard() {
                     cents={totals.balance}
                     className="home-balance-value"
                   />
-                  <Link href="/cards" className="home-cards-pill">
-                    <CreditCard size={18} /> Cartões
-                  </Link>
                 </div>
+                <section className="home-monthly" aria-label="Resumo do mês">
+                  <div className="home-section-heading">
+                    <p className="eyebrow">ESTE MÊS</p>
+                    <span>
+                      {new Intl.DateTimeFormat("pt-BR", {
+                        month: "long",
+                        year: "numeric",
+                      }).format(now)}
+                    </span>
+                  </div>
+                  <FinancialSummary totals={totals} />
+                </section>
               </div>
-              <section className="home-monthly" aria-label="Resumo do mês">
-                <div className="home-section-heading">
-                  <p className="eyebrow">ESTE MÊS</p>
-                  <span className="muted text-xs">
-                    {new Intl.DateTimeFormat("pt-BR", {
-                      month: "long",
-                      year: "numeric",
-                    }).format(now)}
-                  </span>
-                </div>
-                <FinancialSummary totals={totals} />
-              </section>
             </section>
           </div>
           <div className="home-content-surface">
@@ -228,11 +225,13 @@ function FinancialSummary({
     <div className="financial-summary">
       {items.map((item) => (
         <div className={`financial-summary-item ${item.kind}`} key={item.title}>
-          <span>
+          <span
+            role="img"
+            aria-label={`${item.title}: ${formatMoney(item.cents)}`}
+          >
             {item.icon}
-            {item.title}
+            <Money cents={item.cents} />
           </span>
-          <Money cents={item.cents} />
         </div>
       ))}
     </div>

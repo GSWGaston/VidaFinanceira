@@ -46,6 +46,8 @@
   --shadow-sm: 0 8px 24px #693a2a0b;
   --home-hero-top: #622435;
   --home-hero-end: #c34c75;
+  --home-income: #b5f3c9;
+  --home-expense: #ffcfca;
   --home-content: #ffffff;
 }
 .dark {
@@ -92,6 +94,8 @@
   --shadow-sm: 0 8px 24px #1009071c;
   --home-hero-top: #3f2030;
   --home-hero-end: #85405f;
+  --home-income: #a6eebc;
+  --home-expense: #ffbbb6;
   --home-content: #30201c;
 }
 @theme inline {
@@ -1423,9 +1427,9 @@ button:disabled {
   transform: translateX(-50%);
 }
 .home-loading-month {
-  height: 78px;
+  height: 104px;
   border-radius: var(--radius-sm);
-  background: var(--soft);
+  background: #ffffff35;
 }
 .home-balance {
   position: absolute;
@@ -1457,47 +1461,36 @@ button:disabled {
   text-overflow: ellipsis;
   white-space: nowrap;
 }
-.home-cards-pill {
-  display: inline-flex;
-  height: 44px;
-  align-items: center;
-  gap: 9px;
-  margin-top: 14px;
-  border: 1px solid #ffffff55;
-  border-radius: 99px;
-  background: #ffffff25;
-  color: #fff;
-  padding: 0 19px;
-  font-size: 13px;
-  font-weight: 700;
-  opacity: max(0, calc(1 - 2 * var(--home-progress, 0)));
-  transform: scale(calc(1 - 0.1 * var(--home-progress, 0)));
-}
-.home-cards-pill:hover {
-  background: #ffffff3b;
-}
 .home-monthly {
   position: absolute;
   z-index: 1;
   right: 20px;
-  bottom: -58px;
+  bottom: 18px;
   left: 20px;
   width: min(calc(100% - 40px), 570px);
   margin: 0 auto;
-  border: 1px solid var(--color-border);
-  border-radius: var(--radius-md);
-  background: var(--color-surface-soft);
-  padding: 15px 18px 7px;
-  box-shadow: var(--shadow-sm);
+  border: 1px solid #ffffff52;
+  border-radius: 19px;
+  background: #ffffff29;
+  padding: 14px 17px;
+  box-shadow:
+    inset 0 1px #ffffff25,
+    0 8px 24px #38102320;
+  backdrop-filter: blur(12px);
+  opacity: max(0, calc(1 - 2 * var(--home-progress, 0)));
 }
 .home-monthly .eyebrow {
-  color: var(--color-text-secondary);
+  color: #fff;
 }
 .home-section-heading {
   display: flex;
   align-items: center;
   justify-content: space-between;
   gap: 8px;
+}
+.home-monthly .home-section-heading > span {
+  color: #fff8;
+  font-size: 12px;
 }
 .home-monthly .financial-summary {
   grid-template-columns: repeat(2, minmax(0, 1fr));
@@ -1507,17 +1500,39 @@ button:disabled {
   box-shadow: none;
 }
 .home-monthly .financial-summary-item {
-  padding: 14px 12px 10px;
+  padding: 14px 10px 2px;
 }
-.home-monthly .financial-summary-item > span + span {
-  margin-top: 8px;
-  font-size: clamp(17px, 2vw, 23px);
+.home-monthly .financial-summary-item + .financial-summary-item {
+  border-left: 1px solid #ffffff50;
+}
+.home-monthly .financial-summary-item > span {
+  display: flex;
+  justify-content: center;
+  gap: 7px;
+  min-width: 0;
+}
+.home-monthly .financial-summary-item > span > span {
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  font-size: clamp(15px, 4.6vw, 24px);
+  font-weight: 850;
+  letter-spacing: -0.04em;
+}
+.home-monthly .financial-summary-item.income > span {
+  color: var(--home-income);
+}
+.home-monthly .financial-summary-item.expense > span {
+  color: var(--home-expense);
+}
+.home-monthly .financial-summary-item > span > span {
+  color: inherit;
 }
 .home-content-surface {
   min-height: 560px;
   border-radius: var(--radius-lg) var(--radius-lg) 0 0;
   background: var(--home-content);
-  padding: 86px 20px 42px;
+  padding: 30px 20px 42px;
 }
 .home-content-inner {
   max-width: 1140px;
@@ -1655,10 +1670,10 @@ button:disabled {
     font-size: calc(38px - 10px * var(--home-progress, 0));
   }
   .home-monthly {
-    padding: 14px 15px 6px;
+    padding: 14px 15px;
   }
   .home-monthly .financial-summary-item {
-    padding: 13px 9px 9px;
+    padding: 13px 6px 2px;
   }
   .home-content-surface {
     padding-right: 20px;
@@ -1690,7 +1705,7 @@ button:disabled {
 @media (prefers-reduced-motion: reduce) {
   .home-balance-label,
   .home-balance-value,
-  .home-cards-pill,
+  .home-monthly,
   .home-topbar-balance {
     transition: none;
   }
