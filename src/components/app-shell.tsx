@@ -94,16 +94,19 @@ export function AppShell({ children }: { children: React.ReactNode }) {
       const progress = reducedMotion.matches
         ? 0
         : Math.min(1, Math.max(0, scroll / 170));
+      const smoothProgress = progress * progress * (3 - 2 * progress);
       const headerProgress = reducedMotion.matches
         ? Number(scroll >= 290)
         : Math.min(1, Math.max(0, (scroll - 170) / 110));
+      const smoothHeaderProgress =
+        headerProgress * headerProgress * (3 - 2 * headerProgress);
       document.documentElement.style.setProperty(
         "--home-progress",
-        String(progress),
+        String(smoothProgress),
       );
       document.documentElement.style.setProperty(
         "--home-header-progress",
-        String(headerProgress),
+        String(smoothHeaderProgress),
       );
     };
     const onScroll = () => {

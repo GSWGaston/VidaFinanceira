@@ -1323,9 +1323,15 @@ button:disabled {
   right: 0;
   left: 0;
   height: calc(
-    var(--home-topbar-height) + 110px * var(--home-header-progress, 0)
+    var(--home-topbar-height) + 82px * var(--home-header-progress, 0)
   );
-  background: var(--home-hero-top);
+  border-radius: 0 0 calc(20px * var(--home-header-progress, 0))
+    calc(20px * var(--home-header-progress, 0));
+  background: linear-gradient(
+    165deg,
+    var(--home-hero-top),
+    var(--home-hero-end)
+  );
   content: "";
 }
 .home-topbar-logo {
@@ -1380,7 +1386,7 @@ button:disabled {
 }
 .home-topbar-balance {
   position: absolute;
-  top: calc(var(--home-topbar-height) + 27px);
+  top: calc(var(--home-topbar-height) + 18px);
   left: 50%;
   width: max-content;
   max-width: calc(100% - 40px);
@@ -1402,7 +1408,9 @@ button:disabled {
 .home-stage {
   position: sticky;
   top: var(--home-topbar-height);
-  height: calc(290px - 170px * var(--home-progress, 0));
+  height: calc(290px - 202px * var(--home-progress, 0));
+  border-radius: 0 0 calc(20px * var(--home-progress, 0))
+    calc(20px * var(--home-progress, 0));
   background: linear-gradient(
     180deg,
     var(--home-hero-top),
@@ -1534,7 +1542,8 @@ button:disabled {
 }
 .home-content-surface {
   min-height: 560px;
-  border-radius: var(--radius-lg) var(--radius-lg) 0 0;
+  border-radius: 26px 26px 0 0;
+  box-shadow: 0 -8px 18px #3f203015;
   background: var(--home-content);
   padding: 30px 20px 42px;
 }
