@@ -47,7 +47,7 @@
   --home-hero-top: #622435;
   --home-hero-end: #c34c75;
   --home-income: #b5f3c9;
-  --home-expense: #ffcfca;
+  --home-expense: #fff0eb;
   --home-content: #ffffff;
 }
 .dark {
@@ -95,7 +95,7 @@
   --home-hero-top: #3f2030;
   --home-hero-end: #85405f;
   --home-income: #a6eebc;
-  --home-expense: #ffbbb6;
+  --home-expense: #ffe6e2;
   --home-content: #30201c;
 }
 @theme inline {
@@ -1483,14 +1483,14 @@ button:disabled {
   color: #fff;
 }
 .home-section-heading {
-  display: flex;
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
   align-items: center;
-  justify-content: space-between;
-  gap: 8px;
 }
 .home-monthly .home-section-heading > span {
-  color: #fff8;
+  color: #fff;
   font-size: 12px;
+  text-align: right;
 }
 .home-monthly .financial-summary {
   grid-template-columns: repeat(2, minmax(0, 1fr));
@@ -1500,16 +1500,20 @@ button:disabled {
   box-shadow: none;
 }
 .home-monthly .financial-summary-item {
-  padding: 14px 10px 2px;
+  padding: 14px 0 2px;
 }
 .home-monthly .financial-summary-item + .financial-summary-item {
   border-left: 1px solid #ffffff50;
+  padding-left: 12px;
 }
 .home-monthly .financial-summary-item > span {
   display: flex;
-  justify-content: center;
+  justify-content: flex-start;
   gap: 7px;
   min-width: 0;
+}
+.home-monthly .financial-summary-item.expense > span {
+  justify-content: flex-end;
 }
 .home-monthly .financial-summary-item > span > span {
   overflow: hidden;
@@ -1673,7 +1677,7 @@ button:disabled {
     padding: 14px 15px;
   }
   .home-monthly .financial-summary-item {
-    padding: 13px 6px 2px;
+    padding: 13px 0 2px;
   }
   .home-content-surface {
     padding-right: 20px;
